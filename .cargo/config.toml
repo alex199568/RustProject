@@ -1,0 +1,2 @@
+[build]
+rustflags = ["-C", "target-cpu=native"]  # use all your CPU’s instructions
