@@ -21,24 +21,24 @@ impl<const D: usize> Matrix<D> {
         Self { items: [[0.0; D]; D] }
     }
 
-    fn submatrix<const OUT: usize>(&self, iExclude: usize, jExclude: usize) -> Matrix<OUT> {
+    fn submatrix<const OUT: usize>(&self, i_exclude: usize, j_exclude: usize) -> Matrix<OUT> {
         debug_assert!(OUT + 1 == D);
         let mut result = Matrix::<OUT>::zero();
 
-        let mut iOffset = 0;
+        let mut i_offset = 0;
         for i in 0..D {
-            if i == iExclude {
-                iOffset = 1;
+            if i == i_exclude {
+                i_offset = 1;
                 continue;
             }
-            let mut jOffset = 0;
+            let mut j_offset = 0;
             for j in 0..D {
-                if j == jExclude {
-                    jOffset = 1;
+                if j == j_exclude {
+                    j_offset = 1;
                     continue;
                 }
 
-                result.items[i - iOffset][j - jOffset] = self.items[i][j];
+                result.items[i - i_offset][j - j_offset] = self.items[i][j];
             }
         }
 
@@ -168,6 +168,45 @@ impl Matrix<4> {
         }
     }
 
+    pub fn rotate_x(rads: f32) -> Self {
+        let c = rads.cos();
+        let s = rads.sin();
+                Self {
+            items: [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, c, -s, 0.0],
+                [0.0, s, c, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+        }
+    }
+
+    pub fn rotate_y(rads: f32) -> Self {
+        let c = rads.cos();
+        let s = rads.sin();
+        Self {
+            items: [
+                [c, 0.0, s, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [-s, 0.0, c, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+        }
+    }
+
+    pub fn rotate_z(rads: f32) -> Self {
+        let c = rads.cos();
+        let s = rads.sin();
+        Self {
+            items: [
+                [c, -s, 0.0, 0.0],
+                [s, c, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+        }
+    }
+
     pub fn scale(x: f32, y: f32, z: f32) -> Self {
         Self {
             items: [
@@ -186,6 +225,18 @@ impl Matrix<4> {
         for i in 0..4 {
             for j in 0..4 {
                 result.items[j][i] = self.cofactor::<3>(i, j) / d;
+            }
+        }
+
+        result
+    }
+
+    pub fn transpose(self) -> Self {
+        let mut result = Self::zero();
+
+        for i in 0..4 {
+            for j in 0..4 {
+                result.items[j][i] = self.items[i][j];
             }
         }
 
