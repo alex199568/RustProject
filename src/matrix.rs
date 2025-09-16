@@ -2,7 +2,10 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-pub struct MatrixFmt<'a>(pub &'a [f32; 16]);
+type Matrix = [f32; 16];
+
+pub struct MatrixFmt<'a>(pub &'a Matrix);
+
 
 impl Display for MatrixFmt<'_> {
 
@@ -15,11 +18,20 @@ impl Display for MatrixFmt<'_> {
     }
 }
 
-pub fn translate(x: f32, y: f32, z: f32) -> [f32; 16] {
+pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
     return [
         1.0, 0.0, 0.0, x,
         0.0, 1.0, 0.0, y,
         0.0, 0.0, 1.0, z,
+        0.0, 0.0, 0.0, 1.0
+    ];
+}
+
+pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
+    return [
+        x, 0.0, 0.0, 0.0,
+        0.0, y, 0.0, 0.0,
+        0.0, 0.0, z, 0.0,
         0.0, 0.0, 0.0, 1.0
     ];
 }

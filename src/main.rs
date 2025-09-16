@@ -35,6 +35,6 @@ fn main() {
 
     println!("White = {}", Color::WHITE);
 
-    let tr = matrix::translate(4.0, 5.0, 6.0);
-    println!("Tr = \n{:#}", matrix::MatrixFmt(&tr));
+    let tr = matrix::scale(4.0, 5.0, 6.0);
+    println!("Scale = \n{:#}", matrix::MatrixFmt(&tr));
 }
