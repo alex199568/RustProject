@@ -29,9 +29,6 @@ fn main() {
         y: 2.0,
         z: -3.0
     };
-    let result = p + a;
-    println!("p = {p}");
-    println!("p + a = {result}");
 
     println!("White = {}", Color::WHITE);
 
@@ -39,8 +36,16 @@ fn main() {
     println!("Translation:\n{}", tr);
     let s = Matrix::<4>::scale(0.2, 0.3, 0.4);
     println!("Scale:\n{}", s);
+
     let transform = tr * s;
     println!("Transform:\n{}", transform);
+
+    let transformed = &transform * p;
+
     let inv = transform.inverse();
     println!("Inverse:\n{}", inv);
+    let original = &inv * transformed;
+    println!("p = {}", p);
+    println!("transformed: {}", transformed);
+    println!("original: {}", original);
 }

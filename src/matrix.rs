@@ -3,6 +3,9 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::ops::Mul;
 
+use crate::vector::Vector;
+use crate::point::Point;
+
 pub struct Matrix<const D: usize> {
     items: [[f32; D]; D]
 }
@@ -88,6 +91,32 @@ impl<const D: usize> Mul for Matrix<D> {
             }
         }
         result
+    }
+}
+
+impl Mul<Vector> for &Matrix<4> {
+
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Vector {
+        Vector {
+            x: rhs.x * self.items[0][0] + rhs.y * self.items[0][1] + rhs.z * self.items[0][2],
+            y: rhs.x * self.items[1][0] + rhs.y * self.items[1][1] + rhs.z * self.items[1][2],
+            z: rhs.x * self.items[2][0] + rhs.y * self.items[2][1] + rhs.z * self.items[2][2]
+        }
+    }
+}
+
+impl Mul<Point> for &Matrix<4> {
+
+    type Output = Point;
+
+    fn mul(self, rhs: Point) -> Point {
+        Point {
+            x: rhs.x * self.items[0][0] + rhs.y * self.items[0][1] + rhs.z * self.items[0][2] + self.items[0][3],
+            y: rhs.x * self.items[1][0] + rhs.y * self.items[1][1] + rhs.z * self.items[1][2] + self.items[1][3],
+            z: rhs.x * self.items[2][0] + rhs.y * self.items[2][1] + rhs.z * self.items[2][2] + self.items[2][3]
+        }
     }
 }
 
