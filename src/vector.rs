@@ -1,4 +1,5 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct Vector {
@@ -18,6 +19,12 @@ impl Vector {
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
         }
+    }
+}
+
+impl Display for Vector {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Vector({}, {}, {})", self.x, self.y, self.z)
     }
 }
 

@@ -14,7 +14,7 @@ fn main() {
         z: 3.0,
     };
     let c = a.cross(b);
-    println!("a cross b = {:?}", c);
+    println!("a cross b = {c}");
     let nc = -c;
-    println!("-c = {:?}", nc);
+    println!("-c = {nc}");
 }
