@@ -1,37 +1,63 @@
 
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::ops::Mul;
 
-type Matrix = [f32; 16];
+pub struct Matrix<const D: usize> {
+    items: [[f32; D]; D]
+}
 
-pub struct MatrixFmt<'a>(pub &'a Matrix);
+impl<const D: usize> Matrix<D> {
 
-
-impl Display for MatrixFmt<'_> {
-
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let m = self.0;
-        writeln!(f, "{}, {}, {}, {}", m[0], m[1], m[2], m[3])?;
-        writeln!(f, "{}, {}, {}, {}", m[4], m[5], m[6], m[7])?;
-        writeln!(f, "{}, {}, {}, {}", m[8], m[9], m[10], m[11])?;
-        write!(f, "{}, {}, {}, {}", m[12], m[13], m[14], m[15])
+    fn zero() -> Self {
+        Self { items: [[0.0; D]; D] }
     }
 }
 
-pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
-    return [
-        1.0, 0.0, 0.0, x,
-        0.0, 1.0, 0.0, y,
-        0.0, 0.0, 1.0, z,
-        0.0, 0.0, 0.0, 1.0
-    ];
+
+impl<const D: usize> Display for Matrix<D> {
+
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for i in 0..D {
+            for j in 0..D {
+                write!(f, "\t{}", self.items[i][j])?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
 }
 
-pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
-    return [
-        x, 0.0, 0.0, 0.0,
-        0.0, y, 0.0, 0.0,
-        0.0, 0.0, z, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ];
+impl Matrix<4> {
+
+    pub const IDENTITY: Self = Self {
+        items: [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ]
+    };
+
+    pub fn translate(x: f32, y: f32, z: f32) -> Self {
+        Self {
+            items: [
+                [ 1.0, 0.0, 0.0, x ],
+                [ 0.0, 1.0, 0.0, y ],
+                [ 0.0, 0.0, 1.0, z ],
+                [ 0.0, 0.0, 0.0, 1.0 ]
+            ]
+        }
+    }
+
+    pub fn scale(x: f32, y: f32, z: f32) -> Self {
+        Self {
+            items: [
+                [ x, 0.0, 0.0, 0.0 ],
+                [ 0.0, y, 0.0, 0.0 ],
+                [ 0.0, 0.0, z, 0.0 ],
+                [ 0.0, 0.0, 0.0, 1.0 ]
+            ]
+        }
+    }
 }

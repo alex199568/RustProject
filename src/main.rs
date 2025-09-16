@@ -6,7 +6,7 @@ mod matrix;
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::color::Color;
-// use crate::matrix;
+use crate::matrix::Matrix;
 
 fn main() {
     let a = Vector {
@@ -35,6 +35,8 @@ fn main() {
 
     println!("White = {}", Color::WHITE);
 
-    let tr = matrix::scale(4.0, 5.0, 6.0);
-    println!("Scale = \n{:#}", matrix::MatrixFmt(&tr));
+    let tr = Matrix::<4>::translate(2.0, 3.5, -1.1);
+    println!("Translation:\n{}", tr);
+    let s = Matrix::<4>::scale(0.2, 0.3, 0.4);
+    println!("Scale:\n{}", s);
 }
