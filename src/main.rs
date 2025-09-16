@@ -41,4 +41,6 @@ fn main() {
     println!("Scale:\n{}", s);
     let transform = tr * s;
     println!("Transform:\n{}", transform);
+    let inv = transform.inverse();
+    println!("Inverse:\n{}", inv);
 }
