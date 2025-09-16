@@ -1,8 +1,10 @@
 mod vector;
 mod point;
+mod color;
 
 use crate::vector::Vector;
 use crate::point::Point;
+use crate::color::Color;
 
 fn main() {
     let a = Vector {
@@ -28,4 +30,6 @@ fn main() {
     let result = p + a;
     println!("p = {p}");
     println!("p + a = {result}");
+
+    println!("White = {}", Color::WHITE);
 }
