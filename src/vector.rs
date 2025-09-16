@@ -20,6 +20,14 @@ impl Vector {
             z: self.x * other.y - self.y * other.x,
         }
     }
+
+    pub fn length(self) -> f32 {
+        self.dot(self).sqrt()
+    }
+
+    pub fn unit(self) -> Self {
+        self / self.length()
+    }
 }
 
 impl Display for Vector {

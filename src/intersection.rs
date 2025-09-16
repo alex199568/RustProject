@@ -12,6 +12,12 @@ pub struct IntersectionBuffer {
 
 impl IntersectionBuffer {
 
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            intersections: Vec::with_capacity(capacity)
+        }
+    }
+
     pub fn add(&mut self, i: Intersection) {
         self.intersections.push(i);
     }
@@ -22,5 +28,9 @@ impl IntersectionBuffer {
             .copied()
             .filter(|i| i.t > 1e-5)
             .min_by(|a, b| a.t.total_cmp(&b.t))
+    }
+
+    pub fn clear(&mut self) {
+        self.intersections.clear();
     }
 }

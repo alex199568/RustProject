@@ -10,6 +10,12 @@ pub struct Sphere {
 
 impl Sphere {
 
+    pub fn new(transform: Matrix<4>) -> Self {
+        Self {
+            inv: transform.inverse()
+        }
+    }
+
     pub fn intersect(&self, ray: Ray, buffer: &mut IntersectionBuffer, index: usize) {
         self.local_intersect(&self.inv * ray, buffer, index);
     }
