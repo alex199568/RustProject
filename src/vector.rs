@@ -28,6 +28,10 @@ impl Vector {
     pub fn unit(self) -> Self {
         self / self.length()
     }
+
+    pub fn reflect(self, normal: Vector) -> Self {
+        self - normal * (2.0 * self.dot(normal))
+    }
 }
 
 impl Display for Vector {

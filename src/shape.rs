@@ -1,18 +1,26 @@
 
 use crate::matrix::Matrix;
 use crate::point::Point;
+use crate::vector::Vector;
 use crate::ray::Ray;
 use crate::intersection::{Intersection, IntersectionBuffer};
+use crate::material::Material;
 
 pub struct Sphere {
-    inv: Matrix<4>
+    inv: Matrix<4>,
+    inv_tr: Matrix<4>,
+    pub material: Material
 }
 
 impl Sphere {
 
-    pub fn new(transform: Matrix<4>) -> Self {
+    pub fn new(transform: Matrix<4>, material: Material) -> Self {
+        let inv = transform.inverse();
+        let inv_tr = inv.transpose();
         Self {
-            inv: transform.inverse()
+            inv: inv,
+            inv_tr: inv_tr,
+            material: material
         }
     }
 
@@ -36,5 +44,16 @@ impl Sphere {
 
         buffer.add(Intersection{ shape_index: index, t: t0});
         buffer.add(Intersection{ shape_index: index, t: t1});
+    }
+
+    pub fn normal(&self, point: Point) -> Vector {
+        let shape_point = &self.inv * point;
+        let shape_normal = self.local_normal(shape_point);
+        let world_normal = &self.inv_tr * shape_normal;
+        world_normal.unit()
+    }
+
+    fn local_normal(&self, point: Point) -> Vector {
+        point - Point::ZERO
     }
 }

@@ -2,7 +2,7 @@
 use crate::color::Color;
 
 use std::path::Path;
-use image::{ColorType, ImageResult, ImageError};
+use image::{ColorType, ImageResult};
 
 pub struct Img {
     pub w: usize,
@@ -41,39 +41,3 @@ impl Img {
         )
     }
 }
-
-/*
-pub struct Color { pub r: f32, pub g: f32, pub b: f32 }
-
-
-
-pub struct Img {
-    pub w: usize,
-    pub h: usize,
-    pub colors: Vec<Color>,
-}
-
-impl Img {
-    pub fn new(w: usize, h: usize) -> Self {
-        // length = w*h, filled (black). Not just capacity.
-        Self { w, h, colors: vec![Color::default(); w * h] }
-    }
-
-    #[inline]
-    fn idx(&self, x: usize, y: usize) -> usize {
-        assert!(x < self.w && y < self.h, "pixel out of bounds");
-        y * self.w + x
-    }
-
-    #[inline]
-    pub fn get(&self, x: usize, y: usize) -> Color {
-        self.colors[self.idx(x, y)]
-    }
-
-    #[inline]
-    pub fn set(&mut self, x: usize, y: usize, color: Color) {
-        let i = self.idx(x, y);
-        self.colors[i] = color;
-    }
-}
-*/

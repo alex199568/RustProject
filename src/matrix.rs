@@ -244,7 +244,7 @@ impl Matrix<4> {
         result
     }
 
-    pub fn transpose(self) -> Self {
+    pub fn transpose(&self) -> Self {
         let mut result = Self::zero();
 
         for i in 0..4 {

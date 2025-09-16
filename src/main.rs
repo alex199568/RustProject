@@ -6,6 +6,8 @@ mod ray;
 mod intersection;
 mod shape;
 mod img;
+mod material;
+mod light;
 
 use std::time::Instant;
 
@@ -17,6 +19,8 @@ use crate::matrix::Matrix;
 use crate::img::Img;
 use crate::shape::Sphere;
 use crate::intersection::IntersectionBuffer;
+use crate::material::Material;
+use crate::light::Light;
 
 fn main() {
     let ray_origin = Point { x: 0.0, y: 0.0, z: -5.0 };
@@ -28,7 +32,19 @@ fn main() {
 
     let mut img = Img::new(canvas_pixels, canvas_pixels);
 
-    let sphere = Sphere::new(Matrix::<4>::IDENTITY);
+    let red_material = Material {
+        color: Color::RED,
+        ambient: 0.01,
+        diffuse: 0.9,
+        specular: 0.8,
+        shininess: 200.0
+    };
+    let sphere = Sphere::new(Matrix::<4>::IDENTITY, red_material);
+
+    let light = Light {
+        position: Point { x: -10.0, y: 10.0, z: -10.0 },
+        intensity: Color::GRAY
+    };
 
     let mut buffer = IntersectionBuffer::new(2);
 
@@ -43,7 +59,12 @@ fn main() {
             sphere.intersect(r, &mut buffer, 0);
 
             if let Some(hit) = buffer.hit() {
-                img.set(x, y, Color::RED);
+                let point = r.at(hit.t);
+                let eye = -r.direction;
+                let normal = sphere.normal(point);
+                let color = light.shade(&sphere.material, point, eye, normal);
+
+                img.set(x, y, color);
             }
 
             buffer.clear();
@@ -53,5 +74,9 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    img.save("renders/sphere.png");
+    let filepath = "renders/light.png";
+    match img.save(filepath) {
+        Ok(_) => println!("Render saved to: {}", filepath),
+        Err(e) => eprintln!("Failed to save image: {}", e)
+    }
 }
