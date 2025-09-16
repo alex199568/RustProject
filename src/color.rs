@@ -7,6 +7,7 @@ use std::ops::Div;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+#[derive(Copy, Clone)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -15,15 +16,24 @@ pub struct Color {
 
 impl Color {
 
-    pub const WHITE: Color = Color{r: 1.0, g: 1.0, b: 1.0};
-    // pub const LIGHT_GRAY: Color = Color{r: 0.75, g: 0.75, b: 0.75};
-    // pub const GRAY: Color = Color{r: 0.5, g: 0.5, b: 0.5};
-    // pub const DARK_GRAY: Color = Color{r: 0.25, g: 0.25, b: 0.25};
-    // pub const BLACK: Color = Color{r: 0.0, g: 0.0, b: 0.0};
+    #[inline]
+    pub fn srgb8(self) -> [u8; 3] {
+        fn enc(x: f32) -> u8 {
+            let y = x.clamp(0.0, 1.0).powf(1.0 / 2.2);
+            (y * 255.0 + 0.5) as u8
+        }
+        [enc(self.r), enc(self.g), enc(self.b)]
+    }
 
-    // pub const RED: Color = Color{r: 1.0, g: 0.0, b: 0.0};
-    // pub const GREEN: Color = Color{r: 0.0, g: 1.0, b: 0.0};
-    // pub const BLUE: Color = Color{r: 0.0, g: 0.0, b: 1.0};
+    pub const WHITE: Color = Color{r: 1.0, g: 1.0, b: 1.0};
+    pub const LIGHT_GRAY: Color = Color{r: 0.75, g: 0.75, b: 0.75};
+    pub const GRAY: Color = Color{r: 0.5, g: 0.5, b: 0.5};
+    pub const DARK_GRAY: Color = Color{r: 0.25, g: 0.25, b: 0.25};
+    pub const BLACK: Color = Color{r: 0.0, g: 0.0, b: 0.0};
+
+    pub const RED: Color = Color{r: 1.0, g: 0.0, b: 0.0};
+    pub const GREEN: Color = Color{r: 0.0, g: 1.0, b: 0.0};
+    pub const BLUE: Color = Color{r: 0.0, g: 0.0, b: 1.0};
 }
 
 impl Display for Color {
