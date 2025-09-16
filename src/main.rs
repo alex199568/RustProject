@@ -2,6 +2,7 @@ use std::ops::Add;
 use std::ops::Div;
 use std::ops::Mul;
 use std::ops::Sub;
+use std::ops::Neg;
 
 #[derive(Debug)]
 struct Vector {
@@ -48,6 +49,14 @@ impl Sub for Vector {
     }
 }
 
+impl Neg for Vector {
+    type Output = Vector;
+
+    fn neg(self) -> Self::Output {
+        Vector{x: -self.x, y: -self.y, z: -self.z}
+    }
+}
+
 impl Mul<f32> for Vector {
     type Output = Self;
 
@@ -85,4 +94,6 @@ fn main() {
     };
     let c = a.cross(b);
     println!("a cross b = {:?}", c);
+    let nc = -c;
+    println!("-c = {:?}", nc);
 }
