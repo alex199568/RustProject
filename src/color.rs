@@ -19,7 +19,7 @@ impl Color {
     #[inline]
     pub fn srgb8(self) -> [u8; 3] {
         fn enc(x: f32) -> u8 {
-            let y = x.clamp(0.0, 1.0).powf(1.0 / 2.2);
+            let y = x.clamp(0.0, 1.0);
             (y * 255.0 + 0.5) as u8
         }
         [enc(self.r), enc(self.g), enc(self.b)]
