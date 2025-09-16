@@ -1,10 +1,12 @@
 mod vector;
 mod point;
 mod color;
+mod matrix;
 
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::color::Color;
+// use crate::matrix;
 
 fn main() {
     let a = Vector {
@@ -32,4 +34,7 @@ fn main() {
     println!("p + a = {result}");
 
     println!("White = {}", Color::WHITE);
+
+    let tr = matrix::translate(4.0, 5.0, 6.0);
+    println!("Tr = \n{:#}", matrix::MatrixFmt(&tr));
 }
