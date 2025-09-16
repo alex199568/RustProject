@@ -5,6 +5,7 @@ use std::ops::Mul;
 
 use crate::vector::Vector;
 use crate::point::Point;
+use crate::ray::Ray;
 
 pub struct Matrix<const D: usize> {
     items: [[f32; D]; D]
@@ -116,6 +117,18 @@ impl Mul<Point> for &Matrix<4> {
             x: rhs.x * self.items[0][0] + rhs.y * self.items[0][1] + rhs.z * self.items[0][2] + self.items[0][3],
             y: rhs.x * self.items[1][0] + rhs.y * self.items[1][1] + rhs.z * self.items[1][2] + self.items[1][3],
             z: rhs.x * self.items[2][0] + rhs.y * self.items[2][1] + rhs.z * self.items[2][2] + self.items[2][3]
+        }
+    }
+}
+
+impl Mul<Ray> for &Matrix<4> {
+
+    type Output = Ray;
+
+    fn mul(self, rhs: Ray) -> Ray {
+        Ray {
+            origin: self * rhs.origin,
+            direction: self * rhs.direction
         }
     }
 }

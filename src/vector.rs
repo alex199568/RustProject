@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vector {
     pub x: f32,
     pub y: f32,
