@@ -28,6 +28,25 @@ impl<const D: usize> Display for Matrix<D> {
     }
 }
 
+impl<const D: usize> Mul for Matrix<D> {
+
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..D {
+            for j in 0..D {
+                let mut sum: f32 = 0.0;
+                for k in 0..D {
+                    sum += self.items[i][k] * other.items[k][j];
+                }
+                result.items[i][j] = sum;
+            }
+        }
+        result
+    }
+}
+
 impl Matrix<4> {
 
     pub const IDENTITY: Self = Self {

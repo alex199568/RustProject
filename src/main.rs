@@ -39,4 +39,6 @@ fn main() {
     println!("Translation:\n{}", tr);
     let s = Matrix::<4>::scale(0.2, 0.3, 0.4);
     println!("Scale:\n{}", s);
+    let transform = tr * s;
+    println!("Transform:\n{}", transform);
 }
