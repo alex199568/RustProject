@@ -33,7 +33,25 @@ fn main() {
         specular: 0.8,
         shininess: 200.0
     };
-    let sphere = Sphere::new(Matrix::<4>::IDENTITY, red_material);
+    let green_material = Material {
+        color: Color::GREEN,
+        ambient: 0.01,
+        diffuse: 0.9,
+        specular: 0.8,
+        shininess: 150.0
+    };
+    let blue_material = Material {
+        color: Color::BLUE,
+        ambient: 0.01,
+        diffuse: 0.9,
+        specular: 0.8,
+        shininess: 230.0
+    };
+
+    let s1 = Sphere::new(Matrix::<4>::IDENTITY, red_material);
+    let s2 = Sphere::new(Matrix::<4>::translate(-2.0, 0.0, 0.0), blue_material);
+    let s3 = Sphere::new(Matrix::<4>::translate(2.0, 0.0, 0.0), green_material);
+    let shapes = [ s1, s2, s3];
 
     let light = Light {
         position: Point { x: -10.0, y: 10.0, z: -10.0 },
@@ -58,12 +76,18 @@ fn main() {
     for y in 0..camera.h {
         for x in 0..camera.w {
             let r = camera.ray(x as f32, y as f32);
-            sphere.intersect(r, &mut buffer, 0);
+
+            for (i, shape) in shapes.iter().enumerate() {
+                shape.intersect(r, &mut buffer, i);
+            }
+
             if let Some(hit) = buffer.hit() {
-                let h = Hit::new(&sphere, hit, r);
-                let color = light.shade(&sphere.material, &h);
+                let shape = &shapes[hit.shape_index];
+                let h = Hit::new(&shapes[hit.shape_index], hit, r);
+                let color = light.shade(&shape.material, &h);
                 img.set(x, y, color);
             }
+
             buffer.clear();
         } 
     }
