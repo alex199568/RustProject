@@ -3,7 +3,7 @@
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::ray::Ray;
-use crate::shape::Sphere;
+use crate::shape::Shape;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
@@ -52,7 +52,7 @@ pub struct Hit {
 
 impl Hit {
 
-    pub fn new(shape: &Sphere, intersection: Intersection, ray: &Ray) -> Self {
+    pub fn new(shape: &Shape, intersection: Intersection, ray: &Ray) -> Self {
         let point = ray.at(intersection.t);
         let eye = -ray.direction;
         let mut normal = shape.normal(point);

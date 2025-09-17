@@ -1,5 +1,5 @@
 
-use crate::shape::Sphere;
+use crate::shape::Shape;
 use crate::Light;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
@@ -11,13 +11,13 @@ use crate::color::Color;
 use crate::material::Material;
 
 pub struct Scene {
-    shapes: Vec<Sphere>,
+    shapes: Vec<Shape>,
     lights: Vec<Light>,
 }
 
 impl Scene {
 
-    pub fn new(shapes: Vec<Sphere>, lights: Vec<Light>) -> Self {
+    pub fn new(shapes: Vec<Shape>, lights: Vec<Light>) -> Self {
         Self {
             shapes: shapes,
             lights: lights,
@@ -73,7 +73,7 @@ impl Scene {
         if let Some(hit) = buffer.hit() {
             let shape = &self.shapes[hit.shape_index];
             let h = Hit::new(shape, hit, ray);
-            return self.shade(&h, &shape.material, buffer);
+            return self.shade(&h, shape.material(), buffer);
         }
 
         Color::BLACK

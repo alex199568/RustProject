@@ -6,6 +6,8 @@ use crate::ray::Ray;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
 
+use std::convert::From;
+
 pub struct Sphere {
     inv: Matrix<4>,
     inv_tr: Matrix<4>,
@@ -22,11 +24,6 @@ impl Sphere {
             inv_tr: inv_tr,
             material: material
         }
-    }
-
-    pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
-        let transformed_ray = &self.inv * ray;
-        self.local_intersect(&transformed_ray, buffer, index);
     }
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
@@ -47,14 +44,51 @@ impl Sphere {
         buffer.add(Intersection{ shape_index: index, t: t1});
     }
 
-    pub fn normal(&self, point: Point) -> Vector {
+    fn local_normal(&self, point: Point) -> Vector {
+        point - Point::ZERO
+    }
+
+    fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        let transformed_ray = &self.inv * ray;
+        self.local_intersect(&transformed_ray, buffer, index);
+    }
+
+    fn normal(&self, point: Point) -> Vector {
         let shape_point = &self.inv * point;
         let shape_normal = self.local_normal(shape_point);
         let world_normal = &self.inv_tr * shape_normal;
         world_normal.unit()
     }
+}
 
-    fn local_normal(&self, point: Point) -> Vector {
-        point - Point::ZERO
+pub enum Shape {
+    Sphere(Sphere)
+}
+
+impl Shape {
+
+    pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        match self {
+            Shape::Sphere(s) => s.intersect(ray, buffer, index)
+        }
+    }
+
+    pub fn normal(&self, point: Point) -> Vector {
+        match self {
+            Shape::Sphere(s) => s.normal(point)
+        }
+    }
+
+    pub fn material(&self) -> &Material {
+        match self {
+            Shape::Sphere(s) => &s.material
+        }
+    }
+}
+
+impl From<Sphere> for Shape {
+
+    fn from(s: Sphere) -> Self {
+        Shape::Sphere(s)
     }
 }

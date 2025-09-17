@@ -30,9 +30,6 @@ use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
 
-// Single thread: 8365.784 ms
-// Rayon: 990.355 ms
-
 fn main() {
     let red_material = Material {
         color: Color::RED,
@@ -67,7 +64,7 @@ fn main() {
     let s2 = Sphere::new(Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
     let floor = Sphere::new(Matrix::<4>::scale(10.0, 0.001, 10.0), light_gray_material);
-    let shapes = vec![ s1, s2, s3, floor];
+    let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into()];
 
     let l1 = Light {
         position: Point { x: -10.0, y: 10.0, z: -10.0 },
@@ -124,7 +121,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/shadow.png";
+    let filepath = "renders/plane.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
