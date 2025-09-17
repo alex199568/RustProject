@@ -19,16 +19,13 @@ use rayon::prelude::*;
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::color::Color;
-use crate::ray::Ray;
 use crate::matrix::Matrix;
-use crate::img::Img;
 use crate::img::AccImg;
 use crate::shape::Sphere;
 use crate::shape::Plane;
 use crate::intersection::IntersectionBuffer;
-use crate::intersection::Hit;
 use crate::material::Material;
-use crate::pattern::Stripes;
+use crate::pattern::{Stripes, Gradient};
 use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
@@ -39,14 +36,21 @@ fn main() {
     let blue_material = Material::color(Color::BLUE, 0.01, 0.9, 0.8, 220.0);
     let light_gray_material = Material::color(Color::LIGHT_GRAY, 0.01, 0.9, 0.8, 100.0);
 
-    let stripes = Stripes::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::LIGHT_GRAY);
-    let stripes_material = Material::pattern(stripes, 0.01, 0.9, 0.8, 120.0);
+    let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
+    let stripes_material = Material::pattern(stripes.into(), 0.01, 0.9, 0.8, 120.0);
+
+    let gradient = Gradient::new(&Matrix::<4>::IDENTITY, Color::LIGHT_GRAY, Color::GRAY);
+    let gradient_material = Material::pattern(gradient.into(), 0.01, 0.9, 0.8, 220.0);
 
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
-    let floor = Plane::new(&Matrix::<4>::IDENTITY, stripes_material);
-    let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into()];
+    let floor = Plane::new(&Matrix::<4>::IDENTITY, gradient_material);
+
+    let wall1_tr = Matrix::<4>::translate(0.0, 0.0, 3.0) * Matrix::<4>::rotate_x(std::f32::consts::PI / 2.0);
+    let wall1 = Plane::new(&wall1_tr, stripes_material);
+    
+    let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into(), wall1.into()];
 
     let l1 = Light {
         position: Point { x: -10.0, y: 10.0, z: -10.0 },
@@ -59,7 +63,7 @@ fn main() {
     let lights = vec![l1, l2];
 
     let capacity = shapes.len() * 2;
-    let mut scene = Scene::new(shapes, lights);
+    let scene = Scene::new(shapes, lights);
 
     let camera = Camera::new(
         1280, 720, 
@@ -73,7 +77,6 @@ fn main() {
 
     let mut aimg = AccImg::new(camera.w, camera.h);
     let aa = 4;
-    let img_step = 1.0 / aa as f32;
 
     println!("Rendeing threads: {}", rayon::current_num_threads());
 

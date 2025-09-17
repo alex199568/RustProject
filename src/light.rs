@@ -1,8 +1,6 @@
 
 use crate::point::Point;
 use crate::color::Color;
-use crate::material::Material;
-use crate::vector::Vector;
 use crate::shape::Shape;
 use crate::intersection::Hit;
 

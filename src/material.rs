@@ -1,6 +1,6 @@
 
 use crate::color::Color;
-use crate::pattern::Stripes;
+use crate::pattern::Pattern;
 
 pub struct Material {
     pub color: Color,
@@ -8,7 +8,7 @@ pub struct Material {
     pub diffuse: f32,
     pub specular: f32,
     pub shininess: f32,
-    pub pattern: Option<Stripes>
+    pub pattern: Option<Pattern>
 }
 
 impl Material {
@@ -24,7 +24,7 @@ impl Material {
         }
     }
 
-    pub fn pattern(pattern: Stripes, ambient: f32, diffuse: f32, specular: f32, shininess: f32) -> Self {
+    pub fn pattern(pattern: Pattern, ambient: f32, diffuse: f32, specular: f32, shininess: f32) -> Self {
         Self {
             color: Color::BLACK,
             ambient: ambient,

@@ -1,14 +1,11 @@
 
 use crate::shape::Shape;
 use crate::Light;
-use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
 use crate::point::Point;
-use crate::vector::Vector;
 use crate::ray::Ray;
 use crate::color::Color;
-use crate::material::Material;
 
 pub struct Scene {
     shapes: Vec<Shape>,

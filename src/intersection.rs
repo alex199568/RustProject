@@ -45,9 +45,9 @@ pub struct Hit {
     pub point: Point,
     pub eye: Vector,
     pub normal: Vector,
-    pub over_point: Point,
-    pub under_point: Point,
-    pub reflect: Vector
+    pub _over_point: Point,
+    pub _under_point: Point,
+    pub _reflect: Vector
 }
 
 impl Hit {
@@ -69,9 +69,9 @@ impl Hit {
             point: point,
             eye: eye,
             normal: normal,
-            over_point: over_point,
-            under_point: under_point,
-            reflect: reflect
+            _over_point: over_point,
+            _under_point: under_point,
+            _reflect: reflect
         }
     }
 }

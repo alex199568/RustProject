@@ -108,7 +108,7 @@ impl LocalShape for Plane {
         buffer.add(Intersection{shape_index: index, t: t});
     }
 
-    fn local_normal(&self, point: Point) -> Vector {
+    fn local_normal(&self, _point: Point) -> Vector {
         Vector::Y
     }
 }
