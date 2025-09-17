@@ -11,24 +11,21 @@ use crate::material::Material;
 pub struct Scene {
     shapes: Vec<Sphere>,
     lights: Vec<Light>,
-    intersections: IntersectionBuffer
 }
 
 impl Scene {
 
     pub fn new(shapes: Vec<Sphere>, lights: Vec<Light>) -> Self {
-        let capacity = shapes.len() * 2;
         Self {
             shapes: shapes,
             lights: lights,
-            intersections: IntersectionBuffer::new(capacity)
         }
     }
 
-    fn intersect(&mut self, ray: &Ray) {
-        self.intersections.clear();
+    fn intersect(&self, ray: &Ray, intersections: &mut IntersectionBuffer) {
+        intersections.clear();
         for (i, shape) in self.shapes.iter().enumerate() {
-            shape.intersect(ray, &mut self.intersections, i);
+            shape.intersect(ray, intersections, i);
         }
     }
 
@@ -43,9 +40,9 @@ impl Scene {
         result
     }
 
-    pub fn color(&mut self, ray: &Ray) -> Color {
-        self.intersect(ray);
-        if let Some(hit) = self.intersections.hit() {
+    pub fn color(&self, ray: &Ray, buffer: &mut IntersectionBuffer) -> Color {
+        self.intersect(ray, buffer);
+        if let Some(hit) = buffer.hit() {
             let shape = &self.shapes[hit.shape_index];
             let h = Hit::new(shape, hit, ray);
             return self.shade(&h, &shape.material);

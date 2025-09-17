@@ -45,7 +45,7 @@ impl Img {
 pub struct AccImg {
     pub w: usize,
     pub h: usize,
-    colors: Vec<AccColor>
+    pub colors: Vec<AccColor>
 }
 
 impl AccImg {

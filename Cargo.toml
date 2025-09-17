@@ -16,3 +16,4 @@ opt-level = 1         # faster compiles for the edit/run loop
 
 [dependencies]
 image = { version = "0.25.8", features = ["png"] }
+rayon = "1.11.0"

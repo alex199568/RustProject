@@ -13,6 +13,8 @@ mod scene;
 
 use std::time::Instant;
 
+use rayon::prelude::*;
+
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::color::Color;
@@ -29,6 +31,7 @@ use crate::camera::Camera;
 use crate::scene::Scene;
 
 // Single thread: 8365.784 ms
+// Rayon: 990.355 ms
 
 fn main() {
     let red_material = Material {
@@ -76,6 +79,7 @@ fn main() {
     };
     let lights = vec![l1, l2];
 
+    let capacity = shapes.len() * 2;
     let mut scene = Scene::new(shapes, lights);
 
     let camera = Camera::new(
@@ -88,30 +92,81 @@ fn main() {
         )
     );
 
-    let start = Instant::now();
-
     let mut aimg = AccImg::new(camera.w, camera.h);
     let aa = 8;
     let img_step = 1.0 / aa as f32;
 
-    let mut y = 0.0f32;
-    while y < aimg.h as f32 {
-        let mut x = 0.0f32;
-        while x < aimg.w as f32 {
-            let r = camera.ray(x, y);
-            let c = scene.color(&r);
-            aimg.set(x, y, c);
-            x += img_step;
+    let start = Instant::now();
+
+    let w = aimg.w;
+    aimg.colors
+    .par_chunks_mut(w)
+    .enumerate()
+    .for_each_init( || IntersectionBuffer::new(capacity), |buffer, (y, row)| {
+        // let mut buffer = IntersectionBuffer::new(capacity);
+        let fy = y as f32;
+        for x in 0..w {
+            let fx = x as f32;
+            for sy in 0..aa {
+                for sx in 0..aa {
+                    let u = fx + (sx as f32 + 0.5) / aa as f32;
+                    let v = fy + (sy as f32 + 0.5) / aa as f32;
+                    let r = camera.ray(u, v);
+                    let c = scene.color(&r, buffer);
+                    row[x] += c;
+                }
+            }
         }
-        y += img_step;
-    }
+    });
+
 
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/ascene.png";
+    let filepath = "renders/apscene.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
     }
 }
+
+
+    // let mut y = 0.0f32;
+    // while y < aimg.h as f32 {
+    //     let mut x = 0.0f32;
+    //     while x < aimg.w as f32 {
+    //         let r = camera.ray(x, y);
+    //         let c = scene.color(&r);
+    //         aimg.set(x, y, c);
+    //         x += img_step;
+    //     }
+    //     y += img_step;
+    // }
+
+    /*
+    let w = aimg.w;
+aimg.pixels_mut()
+    .par_chunks_mut(w)
+    .enumerate()
+    .for_each(|(y, row)| {
+        let fy = y as f32;
+        for x in 0..w {
+            let fx = x as f32;
+
+            // example: 8×8 jittered supersampling within the pixel
+            let aa = 8;
+            let mut acc = AccColor::default();
+            for sy in 0..aa {
+                for sx in 0..aa {
+                    let u = fx + (sx as f32 + 0.5) / aa as f32;
+                    let v = fy + (sy as f32 + 0.5) / aa as f32;
+                    let r = camera.ray(u, v);
+                    let c = scene.color(&r);
+                    acc.add(c); // weight 1 per sub-sample
+                }
+            }
+            row[x].sum = acc.sum;
+            row[x].weight = acc.weight;
+        }
+    });
+     */
