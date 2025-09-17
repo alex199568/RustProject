@@ -140,6 +140,13 @@ impl Shape {
             Shape::Plane(p) => &p.material
         }
     }
+
+    pub fn inv(&self) -> &Matrix<4> {
+        match self {
+            Shape::Sphere(s) => &s.common.inv,
+            Shape::Plane(p) => &p.common.inv
+        }
+    }
 }
 
 impl From<Sphere> for Shape {

@@ -56,12 +56,12 @@ impl Scene {
         0.0
     }
 
-    fn shade(&self, hit: &Hit, material: &Material, buffer: &mut IntersectionBuffer) -> Color {
+    fn shade(&self, hit: &Hit, shape: &Shape, buffer: &mut IntersectionBuffer) -> Color {
         let mut result = Color{r: 0.0, g: 0.0, b: 0.0};
 
         for light in &self.lights {
             let s = self.shadow(light, hit.shape_index, hit.point, buffer);
-            let c = light.shade(material, hit, s);
+            let c = light.shade(shape, hit, s);
             result += c;
         } 
 
@@ -73,7 +73,7 @@ impl Scene {
         if let Some(hit) = buffer.hit() {
             let shape = &self.shapes[hit.shape_index];
             let h = Hit::new(shape, hit, ray);
-            return self.shade(&h, shape.material(), buffer);
+            return self.shade(&h, shape, buffer);
         }
 
         Color::BLACK

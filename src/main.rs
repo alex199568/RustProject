@@ -6,6 +6,7 @@ mod ray;
 mod intersection;
 mod shape;
 mod img;
+mod pattern;
 mod material;
 mod light;
 mod camera;
@@ -27,44 +28,24 @@ use crate::shape::Plane;
 use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
 use crate::material::Material;
+use crate::pattern::Stripes;
 use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
 
 fn main() {
-    let red_material = Material {
-        color: Color::RED,
-        ambient: 0.01,
-        diffuse: 0.9,
-        specular: 0.8,
-        shininess: 200.0
-    };
-    let green_material = Material {
-        color: Color::GREEN,
-        ambient: 0.01,
-        diffuse: 0.9,
-        specular: 0.8,
-        shininess: 150.0
-    };
-    let blue_material = Material {
-        color: Color::BLUE,
-        ambient: 0.01,
-        diffuse: 0.9,
-        specular: 0.8,
-        shininess: 230.0
-    };
-    let light_gray_material = Material {
-        color: Color::LIGHT_GRAY,
-        ambient: 0.01,
-        diffuse: 0.9,
-        specular: 0.8,
-        shininess: 100.0
-    };
+    let red_material = Material::color(Color::RED, 0.01, 0.9, 0.8, 200.0);
+    let green_material = Material::color(Color::GREEN, 0.01, 0.9, 0.8, 150.0);
+    let blue_material = Material::color(Color::BLUE, 0.01, 0.9, 0.8, 220.0);
+    let light_gray_material = Material::color(Color::LIGHT_GRAY, 0.01, 0.9, 0.8, 100.0);
+
+    let stripes = Stripes::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::LIGHT_GRAY);
+    let stripes_material = Material::pattern(stripes, 0.01, 0.9, 0.8, 120.0);
 
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
-    let floor = Plane::new(&Matrix::<4>::IDENTITY, light_gray_material);
+    let floor = Plane::new(&Matrix::<4>::IDENTITY, stripes_material);
     let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into()];
 
     let l1 = Light {
@@ -122,7 +103,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/plane.png";
+    let filepath = "renders/patterns.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
