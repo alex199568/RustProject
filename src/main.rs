@@ -32,9 +32,9 @@ use crate::scene::Scene;
 
 fn main() {
     let red_material = Material::builder().color(Color::RED).build();
-    let green_material = Material::builder().color(Color::GREEN).reflective(0.4).build();
-    let blue_material = Material::builder().color(Color::BLUE).build();
-    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflective(0.7).build();
+    let green_material = Material::builder().color(Color::GREEN).reflection(0.4).build();
+    let blue_material = Material::builder().color(Color::BLUE).refraction(Material::IOR_GLASS).transparency(0.6).build();
+    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflection(0.7).build();
 
     let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
     let stripes_material = Material::builder().pattern(stripes.into()).build();
@@ -46,7 +46,7 @@ fn main() {
     let rings_material = Material::builder().pattern(rings.into()).build();
 
     let checkers = Checkers::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::BLACK);
-    let checkers_material = Material::builder().pattern(checkers.into()).reflective(0.7).build();
+    let checkers_material = Material::builder().pattern(checkers.into()).reflection(0.7).build();
 
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
@@ -131,7 +131,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/reflections.png";
+    let filepath = "renders/refractions.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

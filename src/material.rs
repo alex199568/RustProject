@@ -19,5 +19,18 @@ pub struct Material {
     #[builder(default = None, setter(strip_option))]
     pub pattern: Option<Pattern>,
     #[builder(default = 0.0)]
-    pub reflective: f32
+    pub reflection: f32,
+    #[builder(default = 0.0)]
+    pub transparency: f32,
+    #[builder(default = 1.0)]
+    pub refraction: f32
+}
+
+impl Material {
+
+    pub const IOR_VACUUM: f32 = 1.0;
+    pub const IOR_AIR: f32 = 1.00029;
+    pub const IOR_WATER: f32 = 1.333;
+    pub const IOR_GLASS: f32 = 1.52;
+    pub const IOR_DIAMOND: f32 = 2.417;
 }

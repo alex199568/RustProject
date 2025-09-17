@@ -12,7 +12,7 @@ pub struct Intersection {
 }
 
 pub struct IntersectionBuffer {
-    intersections: Vec<Intersection>
+    pub intersections: Vec<Intersection>
 }
 
 impl IntersectionBuffer {
@@ -45,9 +45,9 @@ pub struct Hit {
     pub point: Point,
     pub eye: Vector,
     pub normal: Vector,
-    pub _over_point: Point,
-    pub _under_point: Point,
-    pub reflect: Vector
+    pub over_point: Point,
+    pub under_point: Point,
+    pub reflect: Vector,
 }
 
 impl Hit {
@@ -69,9 +69,9 @@ impl Hit {
             point: point,
             eye: eye,
             normal: normal,
-            _over_point: over_point,
-            _under_point: under_point,
-            reflect
+            over_point: over_point,
+            under_point: under_point,
+            reflect: reflect,
         }
     }
 }
