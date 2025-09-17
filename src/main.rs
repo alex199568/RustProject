@@ -21,8 +21,7 @@ use crate::point::Point;
 use crate::color::Color;
 use crate::matrix::Matrix;
 use crate::img::AccImg;
-use crate::shape::Sphere;
-use crate::shape::Plane;
+use crate::shape::{Sphere, Plane, Cube};
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
 use crate::pattern::{Stripes, Gradient, Rings, Checkers};
@@ -34,7 +33,7 @@ fn main() {
     let red_material = Material::builder().color(Color::RED).build();
     let green_material = Material::builder().color(Color::GREEN).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
     let blue_material = Material::builder().color(Color::BLUE).refraction(Material::IOR_GLASS).transparency(0.6).build();
-    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
+    let cyan_material = Material::builder().color(Color::CYAN).reflection(0.1).build();
 
     let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
     let stripes_material = Material::builder().pattern(stripes.into()).build();
@@ -48,9 +47,13 @@ fn main() {
     let checkers = Checkers::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::BLACK);
     let checkers_material = Material::builder().pattern(checkers.into()).reflection(0.7).build();
 
-    let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
+    let s1 = Sphere::new(&Matrix::<4>::translate(-1.0, 1.0, 2.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
+    let cube_tr = 
+        Matrix::<4>::translate(0.0, 1.0, -1.0) *
+        Matrix::<4>::rotate_y(std::f32::consts::FRAC_PI_6);
+    let cube = Cube::new(&cube_tr, cyan_material);
     let floor = Plane::new(&Matrix::<4>::IDENTITY, checkers_material);
 
     let wall1_tr = 
@@ -71,7 +74,7 @@ fn main() {
     let wall3 = Plane::new(&wall3_tr, rings_material);
     
     let shapes = vec![ 
-        s1.into(), s2.into(), s3.into(), 
+        s1.into(), s2.into(), s3.into(), cube.into(),
         floor.into(),
         wall1.into(), wall2.into(), wall3.into()
     ];
@@ -93,7 +96,7 @@ fn main() {
         1280, 720, 
         std::f32::consts::PI / 3.0, 
         Matrix::<4>::view(
-            Point{x: 0.0, y: 1.0, z: -8.0},
+            Point{x: 0.0, y: 4.0, z: -12.0},
             Point{x: 0.0, y: 1.0, z: 0.0},
             Vector::Y
         )
@@ -131,7 +134,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/refractions.png";
+    let filepath = "renders/cube.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
