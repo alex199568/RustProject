@@ -117,3 +117,34 @@ impl Div<f32> for Color {
         }
     }
 }
+
+#[derive(Clone)]
+pub struct AccColor {
+    color: Color,
+    count: usize
+}
+
+impl AddAssign<Color> for AccColor {
+
+    fn add_assign(&mut self, rhs: Color) {
+        self.color += rhs;
+        self.count += 1;
+    }
+}
+
+impl AccColor {
+
+    pub fn new() -> Self {
+        Self {
+            color: Color{r: 0.0, g: 0.0, b: 0.0},
+            count: 0
+        }
+    }
+
+    pub fn get(&self) -> Color {
+        if self.count == 0 {
+            return self.color;
+        }
+        self.color / self.count as f32
+    }
+}
