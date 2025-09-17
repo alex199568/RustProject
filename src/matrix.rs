@@ -255,4 +255,21 @@ impl Matrix<4> {
 
         result
     }
+
+    pub fn view(from: Point, to: Point, up: Vector) -> Self {
+        let forward = (to - from).unit();
+        let upn = up.unit();
+        let left = forward.cross(upn);
+        let true_up = left.cross(forward);
+        let back = -forward;
+        let orientation = Self {
+            items: [
+                [left.x, left.y, left.z, 0.0],
+                [true_up.x, true_up.y, true_up.z, 0.0],
+                [back.x, back.y, back.z, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+        };
+        orientation * Self::translate(-from.x, -from.y, -from.z)
+    }
 }

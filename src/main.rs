@@ -8,6 +8,7 @@ mod shape;
 mod img;
 mod material;
 mod light;
+mod camera;
 
 use std::time::Instant;
 
@@ -22,17 +23,9 @@ use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
 use crate::material::Material;
 use crate::light::Light;
+use crate::camera::Camera;
 
 fn main() {
-    let ray_origin = Point { x: 0.0, y: 0.0, z: -5.0 };
-    let wall_z: f32 = 10.0;
-    let wall_size: f32 = 7.0;
-    let canvas_pixels = 1080;
-    let half: f32 = wall_size / 2.0;
-    let pixel_size: f32 = wall_size / canvas_pixels as f32;
-
-    let mut img = Img::new(canvas_pixels, canvas_pixels);
-
     let red_material = Material {
         color: Color::RED,
         ambient: 0.01,
@@ -47,27 +40,32 @@ fn main() {
         intensity: Color::GRAY
     };
 
+    let camera = Camera::new(
+        1920, 1080, 
+        std::f32::consts::PI / 3.0, 
+        Matrix::<4>::view(
+            Point{x: 0.0, y: 0.0, z: -8.0},
+            Point{x: 0.0, y: 0.0, z: 0.0},
+            Vector::Y
+        )
+    );
+    let mut img = Img::new(camera.w, camera.h);
+
     let mut buffer = IntersectionBuffer::new(2);
 
     let start = Instant::now();
 
-    for y in 0..canvas_pixels {
-        let world_y = half - pixel_size * y as f32;
-        for x in 0..canvas_pixels {
-            let world_x = -half + pixel_size * x as f32;
-            let position = Point { x: world_x, y: world_y, z: wall_z};
-            let r = Ray { origin: ray_origin, direction: (position - ray_origin).unit()};
+    for y in 0..camera.h {
+        for x in 0..camera.w {
+            let r = camera.ray(x as f32, y as f32);
             sphere.intersect(r, &mut buffer, 0);
-
             if let Some(hit) = buffer.hit() {
                 let h = Hit::new(&sphere, hit, r);
                 let color = light.shade(&sphere.material, &h);
-
                 img.set(x, y, color);
             }
-
             buffer.clear();
-        }
+        } 
     }
 
     let elapsed = start.elapsed();

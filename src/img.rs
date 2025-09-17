@@ -25,7 +25,6 @@ impl Img {
     }
 
     pub fn save<P: AsRef<Path>>(&self, path: P) -> ImageResult<()> {
-        // save png using rust image
         let mut buf = Vec::with_capacity(self.w * self.h * 3);
         for c in &self.colors {
             buf.extend_from_slice(&c.srgb8());
