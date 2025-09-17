@@ -12,9 +12,8 @@ pub struct Light {
 
 impl Light {
 
-    pub fn shade(&self, material: &Material, hit: &Hit) -> Color {
-        // 1.0 - shadow
-        let effective_color = material.color * self.intensity * (1.0);
+    pub fn shade(&self, material: &Material, hit: &Hit, shadow: f32) -> Color {
+        let effective_color = material.color * self.intensity * (1.0 - shadow);
         let light_v = (self.position - hit.point).unit();
         let ambient= effective_color * material.ambient;
         let light_dot_normal = light_v.dot(hit.normal);

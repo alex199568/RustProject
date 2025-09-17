@@ -83,7 +83,7 @@ fn main() {
     let mut scene = Scene::new(shapes, lights);
 
     let camera = Camera::new(
-        1920, 1080, 
+        1280, 720, 
         std::f32::consts::PI / 3.0, 
         Matrix::<4>::view(
             Point{x: 0.0, y: 1.0, z: -8.0},
@@ -93,10 +93,10 @@ fn main() {
     );
 
     let mut aimg = AccImg::new(camera.w, camera.h);
-    let aa = 8;
+    let aa = 4;
     let img_step = 1.0 / aa as f32;
 
-    println!("#Rendeing threads: {}", rayon::current_num_threads());
+    println!("Rendeing threads: {}", rayon::current_num_threads());
 
     let start = Instant::now();
 
@@ -124,7 +124,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/apscene.png";
+    let filepath = "renders/shadow.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

@@ -4,6 +4,8 @@ use crate::Light;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
+use crate::point::Point;
+use crate::vector::Vector;
 use crate::ray::Ray;
 use crate::color::Color;
 use crate::material::Material;
@@ -29,11 +31,37 @@ impl Scene {
         }
     }
 
-    fn shade(&self, hit: &Hit, material: &Material) -> Color {
+    fn shadow_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, ignore: usize) {
+        buffer.clear();
+        for (i, shape) in self.shapes.iter().enumerate() {
+            if i != ignore {
+                shape.intersect(ray, buffer, i);
+            }
+        }
+    }
+
+    fn shadow(&self, light: &Light, shape_index: usize, point: Point, buffer: &mut IntersectionBuffer) -> f32 {
+        let v = light.position - point;
+        let distance = v.length();
+        let direction = v / distance;
+        let r = Ray { origin: point, direction: direction };
+        self.shadow_intersect(&r, buffer, shape_index);
+        if let Some(hit) = buffer.hit() {
+            return if hit.t < distance {
+                1.0
+            } else {
+                0.0
+            }
+        }
+        0.0
+    }
+
+    fn shade(&self, hit: &Hit, material: &Material, buffer: &mut IntersectionBuffer) -> Color {
         let mut result = Color{r: 0.0, g: 0.0, b: 0.0};
 
         for light in &self.lights {
-            let c = light.shade(material, hit);
+            let s = self.shadow(light, hit.shape_index, hit.point, buffer);
+            let c = light.shade(material, hit, s);
             result += c;
         } 
 
@@ -45,7 +73,7 @@ impl Scene {
         if let Some(hit) = buffer.hit() {
             let shape = &self.shapes[hit.shape_index];
             let h = Hit::new(shape, hit, ray);
-            return self.shade(&h, &shape.material);
+            return self.shade(&h, &shape.material, buffer);
         }
 
         Color::BLACK

@@ -41,13 +41,13 @@ impl IntersectionBuffer {
 }
 
 pub struct Hit {
-    intersection: Intersection,
+    pub shape_index: usize,
     pub point: Point,
     pub eye: Vector,
     pub normal: Vector,
-    over_point: Point,
-    under_point: Point,
-    reflect: Vector
+    pub over_point: Point,
+    pub under_point: Point,
+    pub reflect: Vector
 }
 
 impl Hit {
@@ -65,7 +65,7 @@ impl Hit {
         let reflect = ray.direction.reflect(normal);
 
         Self {
-            intersection: intersection,
+            shape_index: intersection.shape_index,
             point: point,
             eye: eye,
             normal: normal,
