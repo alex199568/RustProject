@@ -8,23 +8,57 @@ use crate::material::Material;
 
 use std::convert::From;
 
-pub struct Sphere {
+struct ShapeCommon {
     inv: Matrix<4>,
-    inv_tr: Matrix<4>,
-    pub material: Material
+    inv_tr: Matrix<4>
 }
 
-impl Sphere {
+trait LocalShape {
 
-    pub fn new(transform: Matrix<4>, material: Material) -> Self {
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize);
+    fn local_normal(&self, point: Point) -> Vector;
+}
+
+impl ShapeCommon {
+
+    fn new(transform: &Matrix<4>) -> Self {
         let inv = transform.inverse();
         let inv_tr = inv.transpose();
         Self {
             inv: inv,
-            inv_tr: inv_tr,
+            inv_tr: inv_tr
+        }
+    }
+
+    fn intersect(&self, local: &dyn LocalShape, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        let transformed_ray = &self.inv * ray;
+        local.local_intersect(&transformed_ray, buffer, index);
+    }
+
+    fn normal(&self, local: &dyn LocalShape, point: Point) -> Vector {
+        let shape_point = &self.inv * point;
+        let shape_normal = local.local_normal(shape_point);
+        let world_normal = &self.inv_tr * shape_normal;
+        world_normal.unit()
+    }
+}
+
+pub struct Sphere {
+    common: ShapeCommon,
+    material: Material
+}
+
+impl Sphere {
+
+    pub fn new(transform: &Matrix<4>, material: Material) -> Self {
+        Self {
+            common: ShapeCommon::new(transform),
             material: material
         }
     }
+}
+
+impl LocalShape for Sphere {
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
         let sphere_to_ray = ray.origin - Point::ZERO;
@@ -47,41 +81,63 @@ impl Sphere {
     fn local_normal(&self, point: Point) -> Vector {
         point - Point::ZERO
     }
+}
 
-    fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
-        let transformed_ray = &self.inv * ray;
-        self.local_intersect(&transformed_ray, buffer, index);
+pub struct Plane {
+    common: ShapeCommon,
+    material: Material
+}
+
+impl Plane {
+
+    pub fn new(transform: &Matrix<4>, material: Material) -> Self {
+        Self {
+            common: ShapeCommon::new(transform),
+            material: material
+        }
+    }
+}
+
+impl LocalShape for Plane {
+
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        if ray.direction.y.abs() < 1e-5 {
+            return;
+        }
+        let t = -ray.origin.y / ray.direction.y;
+        buffer.add(Intersection{shape_index: index, t: t});
     }
 
-    fn normal(&self, point: Point) -> Vector {
-        let shape_point = &self.inv * point;
-        let shape_normal = self.local_normal(shape_point);
-        let world_normal = &self.inv_tr * shape_normal;
-        world_normal.unit()
+    fn local_normal(&self, point: Point) -> Vector {
+        Vector::Y
     }
 }
 
 pub enum Shape {
-    Sphere(Sphere)
+    Sphere(Sphere),
+    Plane(Plane)
 }
 
 impl Shape {
 
     pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
         match self {
-            Shape::Sphere(s) => s.intersect(ray, buffer, index)
+            Shape::Sphere(s) => s.common.intersect(s, ray, buffer, index),
+            Shape::Plane(p) => p.common.intersect(p, ray, buffer, index)
         }
     }
 
     pub fn normal(&self, point: Point) -> Vector {
         match self {
-            Shape::Sphere(s) => s.normal(point)
+            Shape::Sphere(s) => s.common.normal(s, point),
+            Shape::Plane(p) => p.common.normal(p, point)
         }
     }
 
     pub fn material(&self) -> &Material {
         match self {
-            Shape::Sphere(s) => &s.material
+            Shape::Sphere(s) => &s.material,
+            Shape::Plane(p) => &p.material
         }
     }
 }
@@ -90,5 +146,12 @@ impl From<Sphere> for Shape {
 
     fn from(s: Sphere) -> Self {
         Shape::Sphere(s)
+    }
+}
+
+impl From<Plane> for Shape {
+
+    fn from(p: Plane) -> Self {
+        Shape::Plane(p)
     }
 }

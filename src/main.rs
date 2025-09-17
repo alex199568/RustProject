@@ -23,6 +23,7 @@ use crate::matrix::Matrix;
 use crate::img::Img;
 use crate::img::AccImg;
 use crate::shape::Sphere;
+use crate::shape::Plane;
 use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
 use crate::material::Material;
@@ -60,10 +61,10 @@ fn main() {
         shininess: 100.0
     };
 
-    let s1 = Sphere::new(Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
-    let s2 = Sphere::new(Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
-    let s3 = Sphere::new(Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
-    let floor = Sphere::new(Matrix::<4>::scale(10.0, 0.001, 10.0), light_gray_material);
+    let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
+    let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
+    let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
+    let floor = Plane::new(&Matrix::<4>::IDENTITY, light_gray_material);
     let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into()];
 
     let l1 = Light {

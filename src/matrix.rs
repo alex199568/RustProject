@@ -231,7 +231,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn inverse(self) -> Self {
+    pub fn inverse(&self) -> Self {
         let mut result = Self::zero();
 
         let d = self.det();
