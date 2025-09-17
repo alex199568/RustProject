@@ -81,9 +81,38 @@ impl LocalPattern for Gradient {
     }
 }
 
+pub struct Rings {
+    common: PatternCommon,
+    a: Color,
+    b: Color
+}
+
+impl Rings {
+
+    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+        Self {
+            common: PatternCommon::new(transform),
+            a: a,
+            b: b
+        }
+    }
+}
+
+impl LocalPattern for Rings {
+
+    fn local_at(&self, point: Point) -> Color {
+        if (point.x * point.x + point.z * point.z).sqrt().floor() as i32 % 2 == 0 {
+            self.a
+        } else {
+            self.b
+        }
+    }
+}
+
 pub enum Pattern {
     Stripes(Stripes),
-    Gradient(Gradient)
+    Gradient(Gradient),
+    Rings(Rings)
 }
 
 impl Pattern {
@@ -91,7 +120,8 @@ impl Pattern {
     pub fn at(&self, shape_inv: &Matrix<4>, point: Point) -> Color {
         match self {
             Pattern::Stripes(s) => s.common.at(s, shape_inv, point),
-            Pattern::Gradient(g) => g.common.at(g, shape_inv, point)
+            Pattern::Gradient(g) => g.common.at(g, shape_inv, point),
+            Pattern::Rings(r) => r.common.at(r, shape_inv, point)
         }
     }
 }
@@ -107,5 +137,12 @@ impl From<Gradient> for Pattern {
 
     fn from(g: Gradient) -> Self {
         Pattern::Gradient(g)
+    }
+}
+
+impl From<Rings> for Pattern {
+
+    fn from(r: Rings) -> Self {
+        Pattern::Rings(r)
     }
 }

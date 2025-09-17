@@ -25,7 +25,7 @@ use crate::shape::Sphere;
 use crate::shape::Plane;
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
-use crate::pattern::{Stripes, Gradient};
+use crate::pattern::{Stripes, Gradient, Rings};
 use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
@@ -34,23 +34,43 @@ fn main() {
     let red_material = Material::color(Color::RED, 0.01, 0.9, 0.8, 200.0);
     let green_material = Material::color(Color::GREEN, 0.01, 0.9, 0.8, 150.0);
     let blue_material = Material::color(Color::BLUE, 0.01, 0.9, 0.8, 220.0);
-    let light_gray_material = Material::color(Color::LIGHT_GRAY, 0.01, 0.9, 0.8, 100.0);
+    let _light_gray_material = Material::color(Color::LIGHT_GRAY, 0.01, 0.9, 0.8, 100.0);
 
     let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
     let stripes_material = Material::pattern(stripes.into(), 0.01, 0.9, 0.8, 120.0);
 
-    let gradient = Gradient::new(&Matrix::<4>::IDENTITY, Color::LIGHT_GRAY, Color::GRAY);
+    let gradient = Gradient::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::LIGHT_GRAY, Color::GRAY);
     let gradient_material = Material::pattern(gradient.into(), 0.01, 0.9, 0.8, 220.0);
+
+    let rings = Rings::new(&Matrix::<4>::IDENTITY, Color::YELLOW, Color::MAGENTA);
+    let rings_material = Material::pattern(rings.into(), 0.01, 0.9, 0.8, 170.0);
 
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
-    let floor = Plane::new(&Matrix::<4>::IDENTITY, gradient_material);
+    let floor = Plane::new(&Matrix::<4>::IDENTITY, _light_gray_material);
 
-    let wall1_tr = Matrix::<4>::translate(0.0, 0.0, 3.0) * Matrix::<4>::rotate_x(std::f32::consts::PI / 2.0);
+    let wall1_tr = 
+        Matrix::<4>::translate(0.0, 0.0, 8.0) * 
+        Matrix::<4>::rotate_y(std::f32::consts::FRAC_PI_3) *
+        Matrix::<4>::rotate_x(std::f32::consts::FRAC_PI_2);
     let wall1 = Plane::new(&wall1_tr, stripes_material);
+
+    let wall2_tr =
+        Matrix::<4>::translate(0.0, 0.0, 8.0) *
+        Matrix::<4>::rotate_y(-std::f32::consts::FRAC_PI_3) *
+        Matrix::<4>::rotate_x(std::f32::consts::FRAC_PI_2);
+    let wall2 = Plane::new(&wall2_tr, gradient_material);
+
+    let wall3_tr =
+        Matrix::<4>::translate(0.0, 0.0, 3.0) *
+        Matrix::<4>::rotate_x(std::f32::consts::FRAC_PI_2);
+    let wall3 = Plane::new(&wall3_tr, rings_material);
     
-    let shapes = vec![ s1.into(), s2.into(), s3.into(), floor.into(), wall1.into()];
+    let shapes = vec![ 
+        s1.into(), s2.into(), s3.into(), 
+        floor.into(), wall1.into(), wall2.into(), wall3.into()
+    ];
 
     let l1 = Light {
         position: Point { x: -10.0, y: 10.0, z: -10.0 },

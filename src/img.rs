@@ -58,12 +58,6 @@ impl AccImg {
         }
     }
 
-    pub fn set(&mut self, x: f32, y: f32, color: Color) {
-        let xi = (x.round() as usize).clamp(0, self.w);
-        let yi = (y.round() as usize).clamp(0, self.h);
-        self.colors[yi * self.w + xi] += color;
-    }
-
     pub fn get(&self, x: usize, y: usize) -> Color {
         self.colors[y * self.w + x].get()
     }
