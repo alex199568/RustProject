@@ -25,7 +25,7 @@ use crate::shape::Sphere;
 use crate::shape::Plane;
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
-use crate::pattern::{Stripes, Gradient, Rings};
+use crate::pattern::{Stripes, Gradient, Rings, Checkers};
 use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
@@ -45,10 +45,13 @@ fn main() {
     let rings = Rings::new(&Matrix::<4>::IDENTITY, Color::YELLOW, Color::MAGENTA);
     let rings_material = Material::pattern(rings.into(), 0.01, 0.9, 0.8, 170.0);
 
+    let checkers = Checkers::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::BLACK);
+    let checkers_material = Material::pattern(checkers.into(), 0.01, 0.9, 0.8, 300.0);
+
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
     let s3 = Sphere::new(&Matrix::<4>::translate(2.0, 1.0, 0.0), green_material);
-    let floor = Plane::new(&Matrix::<4>::IDENTITY, _light_gray_material);
+    let floor = Plane::new(&Matrix::<4>::IDENTITY, checkers_material);
 
     let wall1_tr = 
         Matrix::<4>::translate(0.0, 0.0, 8.0) * 
@@ -90,7 +93,7 @@ fn main() {
         std::f32::consts::PI / 3.0, 
         Matrix::<4>::view(
             Point{x: 0.0, y: 1.0, z: -8.0},
-            Point{x: 0.0, y: 0.5, z: 0.0},
+            Point{x: 0.0, y: 1.0, z: 0.0},
             Vector::Y
         )
     );

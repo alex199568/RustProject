@@ -109,10 +109,39 @@ impl LocalPattern for Rings {
     }
 }
 
+pub struct Checkers {
+    common: PatternCommon,
+    a: Color,
+    b: Color
+}
+
+impl Checkers {
+
+    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+        Self {
+            common: PatternCommon::new(transform),
+            a: a,
+            b: b
+        }
+    }
+}
+
+impl LocalPattern for Checkers {
+
+    fn local_at(&self, point: Point) -> Color {
+        if (point.x.round() + point.y.round() + point.z.round()) as i32 % 2 == 0 {
+            self.a
+        } else {
+            self.b
+        }
+    }
+}
+
 pub enum Pattern {
     Stripes(Stripes),
     Gradient(Gradient),
-    Rings(Rings)
+    Rings(Rings),
+    Checkers(Checkers)
 }
 
 impl Pattern {
@@ -121,7 +150,8 @@ impl Pattern {
         match self {
             Pattern::Stripes(s) => s.common.at(s, shape_inv, point),
             Pattern::Gradient(g) => g.common.at(g, shape_inv, point),
-            Pattern::Rings(r) => r.common.at(r, shape_inv, point)
+            Pattern::Rings(r) => r.common.at(r, shape_inv, point),
+            Pattern::Checkers(c) => c.common.at(c, shape_inv, point)
         }
     }
 }
@@ -144,5 +174,12 @@ impl From<Rings> for Pattern {
 
     fn from(r: Rings) -> Self {
         Pattern::Rings(r)
+    }
+}
+
+impl From<Checkers> for Pattern {
+
+    fn from(c: Checkers) -> Self {
+        Pattern::Checkers(c)
     }
 }
