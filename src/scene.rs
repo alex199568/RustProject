@@ -46,7 +46,8 @@ impl Scene {
         self.shadow_intersect(&r, buffer, shape_index);
         if let Some(hit) = buffer.hit() {
             return if hit.t < distance {
-                1.0
+                let transparency = self.shapes[hit.shape_index].material().transparency;
+                1.0 - transparency
             } else {
                 0.0
             }
@@ -113,10 +114,9 @@ impl Scene {
         (n1, n2)
     }
 
-    #[inline]
-    fn schlick(cos_i: f32, n1: f32, n2: f32) -> f32 {
-        let r0 = ((n1 - n2) / (n1 + n2)).powi(2);
-        r0 + (1.0 - r0) * (1.0 - cos_i).max(0.0).powi(5)
+    fn schlick_ior(cos_i: f32, n1: f32, n2: f32) -> f32 {
+        let f0 = ((n1 - n2)/(n1 + n2)).powi(2);
+        f0 + (1.0 - f0) * (1.0 - cos_i).powi(5)
     }
     
     pub fn color(&self, ray0: &Ray, buf: &mut IntersectionBuffer, max_depth: usize) -> Color {
@@ -148,7 +148,9 @@ impl Scene {
             // optional Fresnel splitting (better than flat refl):
             let (n1, n2) = self.find_refractions(hit, buf);    // uses current buffer contents
             let cos_i = (-ray.direction).dot(h.normal).max(0.0);
-            let F = Self::schlick(cos_i, n1, n2); // reflection coefficient 0..1
+            // let F = Self::schlick(cos_i, n1, n2); // reflection coefficient 0..1
+            let f_phys = Self::schlick_ior(cos_i, n1, n2);
+            let fresnel = 1.0 - (1.0 - m.reflection.clamp(0.0,1.0)) * (1.0 - f_phys); // >= reflection
 
             // Accumulate local (opaque) component:
             // If the material is transparent, scale local down; if opaque, transp=0.
@@ -158,20 +160,21 @@ impl Scene {
             let refl_w = thr * refl; // use F to modulate; drop F if you prefer flat reflectivity, * F
             if refl_w > 1e-5 {
                 let dir = h.reflect;
-                let r = Ray { origin: h.over_point, direction: dir };
+                let r = Ray { origin: h.over_point + dir * 1e-4, direction: dir };
                 stack.push((r, refl_w, depth + 1));
             }
 
             // --- spawn refraction (skip on TIR) ---
-            let refr_w = thr * transp * (1.0 - F);
+            let refr_w = thr * transp * (1.0 - fresnel);
             if refr_w > 1e-5 {
                 let n_ratio = n1 / n2;
+                let cos_i = h.eye.dot(h.normal);
                 let sin2t = n_ratio * n_ratio * (1.0 - cos_i * cos_i);
                 if sin2t <= 1.0 {
                     let cos_t = (1.0 - sin2t).sqrt();
                     // refract dir = n*(n_ratio*cos_i - cos_t) - v*n_ratio, where v = view = -ray.dir
-                    let refr_dir = h.normal * (n_ratio * cos_i - cos_t) - (-ray.direction) * n_ratio;
-                    let r = Ray { origin: h.under_point, direction: refr_dir.unit() };
+                    let refr_dir = h.normal * (n_ratio * cos_i - cos_t) - h.eye * n_ratio;
+                    let r = Ray { origin: h.under_point + refr_dir * 1e-4, direction: refr_dir.unit() };
                     stack.push((r, refr_w, depth + 1));
                 } else {
                     // total internal reflection -> reflection already spawned above carries the energy

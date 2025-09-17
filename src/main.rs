@@ -32,9 +32,9 @@ use crate::scene::Scene;
 
 fn main() {
     let red_material = Material::builder().color(Color::RED).build();
-    let green_material = Material::builder().color(Color::GREEN).reflection(0.4).build();
+    let green_material = Material::builder().color(Color::GREEN).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
     let blue_material = Material::builder().color(Color::BLUE).refraction(Material::IOR_GLASS).transparency(0.6).build();
-    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflection(0.7).build();
+    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
 
     let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
     let stripes_material = Material::builder().pattern(stripes.into()).build();
