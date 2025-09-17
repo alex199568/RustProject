@@ -121,11 +121,11 @@ impl Mul<Point> for &Matrix<4> {
     }
 }
 
-impl Mul<Ray> for &Matrix<4> {
+impl Mul<&Ray> for &Matrix<4> {
 
     type Output = Ray;
 
-    fn mul(self, rhs: Ray) -> Ray {
+    fn mul(self, rhs: &Ray) -> Ray {
         Ray {
             origin: self * rhs.origin,
             direction: self * rhs.direction

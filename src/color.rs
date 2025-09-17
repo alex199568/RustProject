@@ -1,5 +1,6 @@
 
 use std::ops::Add;
+use std::ops::AddAssign;
 use std::ops::Sub;
 use std::ops::Mul;
 use std::ops::Div;
@@ -53,6 +54,15 @@ impl Add for Color {
             g: self.g + other.g,
             b: self.b + other.b
         }
+    }
+}
+
+impl AddAssign for Color {
+    
+    fn add_assign(&mut self, rhs: Self) {
+        self.r += rhs.r;
+        self.g += rhs.g;
+        self.b += rhs.b;
     }
 }
 

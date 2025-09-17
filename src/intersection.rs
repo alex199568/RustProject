@@ -52,7 +52,7 @@ pub struct Hit {
 
 impl Hit {
 
-    pub fn new(shape: &Sphere, intersection: Intersection, ray: Ray) -> Self {
+    pub fn new(shape: &Sphere, intersection: Intersection, ray: &Ray) -> Self {
         let point = ray.at(intersection.t);
         let eye = -ray.direction;
         let mut normal = shape.normal(point);

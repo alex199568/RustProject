@@ -9,6 +9,7 @@ mod img;
 mod material;
 mod light;
 mod camera;
+mod scene;
 
 use std::time::Instant;
 
@@ -24,6 +25,7 @@ use crate::intersection::Hit;
 use crate::material::Material;
 use crate::light::Light;
 use crate::camera::Camera;
+use crate::scene::Scene;
 
 fn main() {
     let red_material = Material {
@@ -51,12 +53,19 @@ fn main() {
     let s1 = Sphere::new(Matrix::<4>::IDENTITY, red_material);
     let s2 = Sphere::new(Matrix::<4>::translate(-2.0, 0.0, 0.0), blue_material);
     let s3 = Sphere::new(Matrix::<4>::translate(2.0, 0.0, 0.0), green_material);
-    let shapes = [ s1, s2, s3];
+    let shapes = vec![ s1, s2, s3];
 
-    let light = Light {
+    let l1 = Light {
         position: Point { x: -10.0, y: 10.0, z: -10.0 },
         intensity: Color::GRAY
     };
+    let l2 = Light {
+        position: Point {x: 8.0, y: 8.0, z: -8.0},
+        intensity: Color::DARK_GRAY
+    };
+    let lights = vec![l1, l2];
+
+    let mut scene = Scene::new(shapes, lights);
 
     let camera = Camera::new(
         1920, 1080, 
@@ -69,27 +78,14 @@ fn main() {
     );
     let mut img = Img::new(camera.w, camera.h);
 
-    let mut buffer = IntersectionBuffer::new(2);
-
     let start = Instant::now();
 
     for y in 0..camera.h {
         for x in 0..camera.w {
             let r = camera.ray(x as f32, y as f32);
-
-            for (i, shape) in shapes.iter().enumerate() {
-                shape.intersect(r, &mut buffer, i);
-            }
-
-            if let Some(hit) = buffer.hit() {
-                let shape = &shapes[hit.shape_index];
-                let h = Hit::new(&shapes[hit.shape_index], hit, r);
-                let color = light.shade(&shape.material, &h);
-                img.set(x, y, color);
-            }
-
-            buffer.clear();
-        } 
+            let c = scene.color(&r);
+            img.set(x, y, c);
+        }
     }
 
     let elapsed = start.elapsed();

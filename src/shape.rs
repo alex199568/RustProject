@@ -24,11 +24,12 @@ impl Sphere {
         }
     }
 
-    pub fn intersect(&self, ray: Ray, buffer: &mut IntersectionBuffer, index: usize) {
-        self.local_intersect(&self.inv * ray, buffer, index);
+    pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        let transformed_ray = &self.inv * ray;
+        self.local_intersect(&transformed_ray, buffer, index);
     }
 
-    fn local_intersect(&self, ray: Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
         let sphere_to_ray = ray.origin - Point::ZERO;
         let a = ray.direction.dot(ray.direction);
         let b = 2.0 * ray.direction.dot(sphere_to_ray);
