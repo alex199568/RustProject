@@ -19,6 +19,7 @@ use crate::matrix::Matrix;
 use crate::img::Img;
 use crate::shape::Sphere;
 use crate::intersection::IntersectionBuffer;
+use crate::intersection::Hit;
 use crate::material::Material;
 use crate::light::Light;
 
@@ -59,10 +60,8 @@ fn main() {
             sphere.intersect(r, &mut buffer, 0);
 
             if let Some(hit) = buffer.hit() {
-                let point = r.at(hit.t);
-                let eye = -r.direction;
-                let normal = sphere.normal(point);
-                let color = light.shade(&sphere.material, point, eye, normal);
+                let h = Hit::new(&sphere, hit, r);
+                let color = light.shade(&sphere.material, &h);
 
                 img.set(x, y, color);
             }
@@ -74,7 +73,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/light.png";
+    let filepath = "renders/scene.png";
     match img.save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

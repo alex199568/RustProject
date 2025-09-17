@@ -3,6 +3,7 @@ use crate::point::Point;
 use crate::color::Color;
 use crate::material::Material;
 use crate::vector::Vector;
+use crate::intersection::Hit;
 
 pub struct Light {
     pub position: Point,
@@ -11,19 +12,19 @@ pub struct Light {
 
 impl Light {
 
-    pub fn shade(&self, material: &Material, point: Point, eye: Vector, normal: Vector) -> Color {
+    pub fn shade(&self, material: &Material, hit: &Hit) -> Color {
         // 1.0 - shadow
         let effective_color = material.color * self.intensity * (1.0);
-        let light_v = (self.position - point).unit();
+        let light_v = (self.position - hit.point).unit();
         let ambient= effective_color * material.ambient;
-        let light_dot_normal = light_v.dot(normal);
+        let light_dot_normal = light_v.dot(hit.normal);
         if light_dot_normal < 0.0 {
             return ambient;
         }
 
         let diffuse = effective_color * (material.diffuse * light_dot_normal);
-        let reflect = (-light_v).reflect(normal);
-        let reflect_dot_eye = reflect.dot(eye);
+        let reflect = (-light_v).reflect(hit.normal);
+        let reflect_dot_eye = reflect.dot(hit.eye);
         if reflect_dot_eye <= 0.0 {
             return ambient + diffuse;
         }
