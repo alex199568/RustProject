@@ -47,7 +47,7 @@ pub struct Hit {
     pub normal: Vector,
     pub _over_point: Point,
     pub _under_point: Point,
-    pub _reflect: Vector
+    pub reflect: Vector
 }
 
 impl Hit {
@@ -71,7 +71,7 @@ impl Hit {
             normal: normal,
             _over_point: over_point,
             _under_point: under_point,
-            _reflect: reflect
+            reflect
         }
     }
 }

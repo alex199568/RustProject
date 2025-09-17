@@ -17,3 +17,4 @@ opt-level = 1         # faster compiles for the edit/run loop
 [dependencies]
 image = { version = "0.25.8", features = ["png"] }
 rayon = "1.11.0"
+typed-builder = "0.22.0"

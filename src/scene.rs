@@ -54,25 +54,48 @@ impl Scene {
     }
 
     fn shade(&self, hit: &Hit, shape: &Shape, buffer: &mut IntersectionBuffer) -> Color {
-        let mut result = Color{r: 0.0, g: 0.0, b: 0.0};
+        let mut surface = Color{r: 0.0, g: 0.0, b: 0.0};
 
         for light in &self.lights {
             let s = self.shadow(light, hit.shape_index, hit.point, buffer);
             let c = light.shade(shape, hit, s);
-            result += c;
-        } 
-
-        result
-    }
-
-    pub fn color(&self, ray: &Ray, buffer: &mut IntersectionBuffer) -> Color {
-        self.intersect(ray, buffer);
-        if let Some(hit) = buffer.hit() {
-            let shape = &self.shapes[hit.shape_index];
-            let h = Hit::new(shape, hit, ray);
-            return self.shade(&h, shape, buffer);
+            surface += c;
         }
 
-        Color::BLACK
+        surface
+    }
+
+    pub fn color(&self, camera_ray: &Ray, buffer: &mut IntersectionBuffer, depth: usize) -> Color {
+        let mut ray = *camera_ray;
+        let mut result = Color {r: 0.0, g: 0.0, b: 0.0};
+        let mut throughput = 1.0f32;
+
+        for _ in 0..depth {
+            self.intersect(&ray, buffer);
+            let Some(hit) = buffer.hit() else {
+                // handle environment
+                break;
+            };
+
+            let shape = &self.shapes[hit.shape_index];
+            let h = Hit::new(shape, hit, &ray);
+
+            let local = self.shade(&h, shape, buffer);
+            let reflection = shape.material().reflective;
+            result += local * (throughput * (1.0 - reflection));
+
+            if reflection <= 0.0 {
+                break;
+            }
+
+            throughput *= reflection;
+            ray = Ray { origin: h._over_point, direction: h.reflect };
+
+            if throughput < 1e-5 {
+                break;
+            }
+        }
+
+        result
     }
 }

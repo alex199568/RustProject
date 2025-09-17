@@ -31,22 +31,22 @@ use crate::camera::Camera;
 use crate::scene::Scene;
 
 fn main() {
-    let red_material = Material::color(Color::RED, 0.01, 0.9, 0.8, 200.0);
-    let green_material = Material::color(Color::GREEN, 0.01, 0.9, 0.8, 150.0);
-    let blue_material = Material::color(Color::BLUE, 0.01, 0.9, 0.8, 220.0);
-    let _light_gray_material = Material::color(Color::LIGHT_GRAY, 0.01, 0.9, 0.8, 100.0);
+    let red_material = Material::builder().color(Color::RED).build();
+    let green_material = Material::builder().color(Color::GREEN).reflective(0.4).build();
+    let blue_material = Material::builder().color(Color::BLUE).build();
+    let _light_gray_material = Material::builder().color(Color::LIGHT_GRAY).reflective(0.7).build();
 
     let stripes = Stripes::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::WHITE, Color::LIGHT_GRAY);
-    let stripes_material = Material::pattern(stripes.into(), 0.01, 0.9, 0.8, 120.0);
+    let stripes_material = Material::builder().pattern(stripes.into()).build();
 
     let gradient = Gradient::new(&Matrix::<4>::scale(0.2, 1.0, 1.0), Color::LIGHT_GRAY, Color::GRAY);
-    let gradient_material = Material::pattern(gradient.into(), 0.01, 0.9, 0.8, 220.0);
+    let gradient_material = Material::builder().pattern(gradient.into()).build();
 
     let rings = Rings::new(&Matrix::<4>::IDENTITY, Color::YELLOW, Color::MAGENTA);
-    let rings_material = Material::pattern(rings.into(), 0.01, 0.9, 0.8, 170.0);
+    let rings_material = Material::builder().pattern(rings.into()).build();
 
     let checkers = Checkers::new(&Matrix::<4>::IDENTITY, Color::WHITE, Color::BLACK);
-    let checkers_material = Material::pattern(checkers.into(), 0.01, 0.9, 0.8, 300.0);
+    let checkers_material = Material::builder().pattern(checkers.into()).reflective(0.7).build();
 
     let s1 = Sphere::new(&Matrix::<4>::translate(0.0, 1.0, 0.0), red_material);
     let s2 = Sphere::new(&Matrix::<4>::translate(-2.0, 1.0, 0.0), blue_material);
@@ -72,7 +72,8 @@ fn main() {
     
     let shapes = vec![ 
         s1.into(), s2.into(), s3.into(), 
-        floor.into(), wall1.into(), wall2.into(), wall3.into()
+        floor.into(),
+        wall1.into(), wall2.into(), wall3.into()
     ];
 
     let l1 = Light {
@@ -100,6 +101,7 @@ fn main() {
 
     let mut aimg = AccImg::new(camera.w, camera.h);
     let aa = 4;
+    let depth = 4;
 
     println!("Rendeing threads: {}", rayon::current_num_threads());
 
@@ -118,7 +120,7 @@ fn main() {
                         let u = fx + (sx as f32 + 0.5) / aa as f32;
                         let v = fy + (sy as f32 + 0.5) / aa as f32;
                         let r = camera.ray(u, v);
-                        let c = scene.color(&r, buffer);
+                        let c = scene.color(&r, buffer, depth);
                         row[x] += c;
                     }
                 }
@@ -129,7 +131,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/patterns.png";
+    let filepath = "renders/reflections.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

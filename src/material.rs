@@ -2,36 +2,22 @@
 use crate::color::Color;
 use crate::pattern::Pattern;
 
+use typed_builder::TypedBuilder;
+
+#[derive(TypedBuilder)]
 pub struct Material {
+    #[builder(default = Color::BLACK)]
     pub color: Color,
+    #[builder(default = 0.01)]
     pub ambient: f32,
+    #[builder(default = 0.9)]
     pub diffuse: f32,
+    #[builder(default = 0.8)]
     pub specular: f32,
+    #[builder(default = 200.0)]
     pub shininess: f32,
-    pub pattern: Option<Pattern>
-}
-
-impl Material {
-
-    pub fn color(color: Color, ambient: f32, diffuse: f32, specular: f32, shininess: f32) -> Self {
-        Self {
-            color: color,
-            ambient: ambient,
-            diffuse: diffuse,
-            specular: specular,
-            shininess: shininess,
-            pattern: None
-        }
-    }
-
-    pub fn pattern(pattern: Pattern, ambient: f32, diffuse: f32, specular: f32, shininess: f32) -> Self {
-        Self {
-            color: Color::BLACK,
-            ambient: ambient,
-            diffuse: diffuse,
-            specular: specular,
-            shininess: shininess,
-            pattern: Some(pattern)
-        }
-    }
+    #[builder(default = None, setter(strip_option))]
+    pub pattern: Option<Pattern>,
+    #[builder(default = 0.0)]
+    pub reflective: f32
 }

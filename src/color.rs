@@ -3,6 +3,7 @@ use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Sub;
 use std::ops::Mul;
+use std::ops::MulAssign;
 use std::ops::Div;
 
 use std::fmt::Display;
@@ -93,6 +94,24 @@ impl Mul for Color {
             g: self.g - other.g,
             b: self.b - other.b
         }
+    }
+}
+
+impl MulAssign for Color {
+
+    fn mul_assign(&mut self, rhs: Self) {
+        self.r *= rhs.r;
+        self.g *= rhs.g;
+        self.b *= rhs.b;
+    }
+}
+
+impl MulAssign<f32> for Color {
+
+    fn mul_assign(&mut self, rhs: f32) {
+        self.r *= rhs;
+        self.g *= rhs;
+        self.b *= rhs;
     }
 }
 
