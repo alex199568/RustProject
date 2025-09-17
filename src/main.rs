@@ -96,28 +96,29 @@ fn main() {
     let aa = 8;
     let img_step = 1.0 / aa as f32;
 
+    println!("#Rendeing threads: {}", rayon::current_num_threads());
+
     let start = Instant::now();
 
     let w = aimg.w;
     aimg.colors
-    .par_chunks_mut(w)
-    .enumerate()
-    .for_each_init( || IntersectionBuffer::new(capacity), |buffer, (y, row)| {
-        // let mut buffer = IntersectionBuffer::new(capacity);
-        let fy = y as f32;
-        for x in 0..w {
-            let fx = x as f32;
-            for sy in 0..aa {
-                for sx in 0..aa {
-                    let u = fx + (sx as f32 + 0.5) / aa as f32;
-                    let v = fy + (sy as f32 + 0.5) / aa as f32;
-                    let r = camera.ray(u, v);
-                    let c = scene.color(&r, buffer);
-                    row[x] += c;
+        .par_chunks_mut(w)
+        .enumerate()
+        .for_each_init( || IntersectionBuffer::new(capacity), |buffer, (y, row)| {
+            let fy = y as f32;
+            for x in 0..w {
+                let fx = x as f32;
+                for sy in 0..aa {
+                    for sx in 0..aa {
+                        let u = fx + (sx as f32 + 0.5) / aa as f32;
+                        let v = fy + (sy as f32 + 0.5) / aa as f32;
+                        let r = camera.ray(u, v);
+                        let c = scene.color(&r, buffer);
+                        row[x] += c;
+                    }
                 }
             }
-        }
-    });
+        });
 
 
     let elapsed = start.elapsed();
@@ -129,44 +130,3 @@ fn main() {
         Err(e) => eprintln!("Failed to save image: {}", e)
     }
 }
-
-
-    // let mut y = 0.0f32;
-    // while y < aimg.h as f32 {
-    //     let mut x = 0.0f32;
-    //     while x < aimg.w as f32 {
-    //         let r = camera.ray(x, y);
-    //         let c = scene.color(&r);
-    //         aimg.set(x, y, c);
-    //         x += img_step;
-    //     }
-    //     y += img_step;
-    // }
-
-    /*
-    let w = aimg.w;
-aimg.pixels_mut()
-    .par_chunks_mut(w)
-    .enumerate()
-    .for_each(|(y, row)| {
-        let fy = y as f32;
-        for x in 0..w {
-            let fx = x as f32;
-
-            // example: 8×8 jittered supersampling within the pixel
-            let aa = 8;
-            let mut acc = AccColor::default();
-            for sy in 0..aa {
-                for sx in 0..aa {
-                    let u = fx + (sx as f32 + 0.5) / aa as f32;
-                    let v = fy + (sy as f32 + 0.5) / aa as f32;
-                    let r = camera.ray(u, v);
-                    let c = scene.color(&r);
-                    acc.add(c); // weight 1 per sub-sample
-                }
-            }
-            row[x].sum = acc.sum;
-            row[x].weight = acc.weight;
-        }
-    });
-     */
