@@ -18,7 +18,7 @@ use glam::Vec3;
 
 use crate::color::Color;
 use crate::img::AccImg;
-use crate::shape::{Sphere, Plane, Cube};
+use crate::shape::{Sphere, Plane, Cube, Cylinder};
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
 use crate::pattern::{Stripes, Gradient, Rings, Checkers};
@@ -31,6 +31,7 @@ fn main() {
     let green_material = Material::builder().color(Color::GREEN).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
     let blue_material = Material::builder().color(Color::BLUE).refraction(Material::IOR_GLASS).transparency(0.6).build();
     let cyan_material = Material::builder().color(Color::CYAN).reflection(0.1).build();
+    let alice_blue_material = Material::builder().color(Color::ALICE_BLUE).build();
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let stripes = Stripes::new(&stripes_affine, Color::WHITE, Color::LIGHT_GRAY);
@@ -58,6 +59,10 @@ fn main() {
         Affine3A::from_translation(glam::vec3(0.0, 1.0, -1.0)) *
         Affine3A::from_rotation_y(std::f32::consts::FRAC_PI_6);
     let cube = Cube::new(&cube_affine, cyan_material);
+
+    let cylinder_affine = Affine3A::from_translation(glam::vec3(-3.5, 1.0, -1.5));
+    let cylinder = Cylinder::new(&cylinder_affine, alice_blue_material, (-1.0, 1.0), true);
+
     let floor = Plane::new(&Affine3A::IDENTITY, checkers_material);
 
     let wall1_tr = 
@@ -78,7 +83,7 @@ fn main() {
     let wall3 = Plane::new(&wall3_tr, rings_material);
     
     let shapes = vec![ 
-        s1.into(), s2.into(), s3.into(), cube.into(),
+        s1.into(), s2.into(), s3.into(), cube.into(), cylinder.into(),
         floor.into(),
         wall1.into(), wall2.into(), wall3.into()
     ];
@@ -141,7 +146,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/cube.png";
+    let filepath = "renders/cylinder.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

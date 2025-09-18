@@ -170,10 +170,88 @@ impl LocalShape for Cube {
     }
 }
 
+pub struct Cylinder {
+    common: ShapeCommon,
+    material: Material,
+    range: (f32, f32),
+    caps: bool
+}
+
+impl Cylinder {
+
+    pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
+        Self {
+            common: ShapeCommon::new(tr),
+            material: material,
+            range: range,
+            caps: caps
+        }
+    }
+
+    fn check_cap(&self, ray: &Ray, t: f32) -> bool {
+        let x = ray.origin.x + t * ray.direction.x;
+        let z = ray.origin.z + t * ray.direction.z;
+        x * x + z * z <= 1.0
+    }
+
+    fn intersect_caps(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        if !self.caps || ray.direction.y.abs() < 1e-5 {
+            return;
+        }
+        let mut t = (self.range.0 - ray.origin.y) / ray.direction.y;
+        if self.check_cap(ray, t) {
+            buffer.add(Intersection{shape_index: index, t: t});
+        }
+        t = (self.range.1 - ray.origin.y) / ray.direction.y;
+        if self.check_cap(ray, t) {
+            buffer.add(Intersection{shape_index: index, t: t});
+        }
+    }
+}
+
+impl LocalShape for Cylinder {
+
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+        self.intersect_caps(ray, buffer, index);
+        let o = ray.origin;
+        let d = ray.direction;
+        let a = d.x * d.x + d.z * d.z;
+        if a.abs() < 1e-6 { return; }
+        let b = 2.0 * o.x * d.x + 2.0 * o.z * d.z;
+        let c = o.x * o.x + o.z * o.z - 1.0;
+        let disc = b * b - 4.0 * a * c;
+        if disc < 0.0 { return; }
+        let sd = disc.sqrt();
+        let t0 = (-b - sd) / (2.0 * a);
+        let mut y0 = o.y + t0 * d.y;
+        if self.range.0 < y0 && y0 < self.range.1 {
+            buffer.add(Intersection{shape_index: index, t: t0});
+        }
+        let t1 = (-b + sd) / (2.0 * a);
+        y0 = o.y + t1 * d.y;
+        if self.range.0 < y0 && y0 < self.range.1 {
+            buffer.add(Intersection{shape_index: index, t: t1});
+        }
+    }
+
+    fn local_normal(&self, point: Vec3A) -> Vec3A {
+        let distance = point.x * point.x + point.z * point.z;
+        if distance < 1.0 && point.y >= self.range.1 - 1e-5 {
+            return glam::vec3a(0.0, 1.0, 0.0);
+        }
+        if distance < 1.0 && point.y <= self.range.0 + 1e-5 {
+            return glam::vec3a(0.0, -1.0, 0.0);
+        }
+        glam::vec3a(point.x, 0.0, point.z)
+    }
+}
+
+
 pub enum Shape {
     Sphere(Sphere),
     Plane(Plane),
-    Cube(Cube)
+    Cube(Cube),
+    Cylinder(Cylinder)
 }
 
 impl Shape {
@@ -182,7 +260,8 @@ impl Shape {
         match self {
             Shape::Sphere(s) => s.common.intersect(s, ray, buffer, index),
             Shape::Plane(p) => p.common.intersect(p, ray, buffer, index),
-            Shape::Cube(c) => c.common.intersect(c, ray, buffer, index)
+            Shape::Cube(c) => c.common.intersect(c, ray, buffer, index),
+            Shape::Cylinder(c) => c.common.intersect(c, ray, buffer, index)
         }
     }
 
@@ -190,7 +269,8 @@ impl Shape {
         match self {
             Shape::Sphere(s) => s.common.normal(s, point),
             Shape::Plane(p) => p.common.normal(p, point),
-            Shape::Cube(c) => c.common.normal(c, point)
+            Shape::Cube(c) => c.common.normal(c, point),
+            Shape::Cylinder(c) => c.common.normal(c, point)
         }
     }
 
@@ -198,7 +278,8 @@ impl Shape {
         match self {
             Shape::Sphere(s) => &s.material,
             Shape::Plane(p) => &p.material,
-            Shape::Cube(c) => &c.material
+            Shape::Cube(c) => &c.material,
+            Shape::Cylinder(c) => &c.material
         }
     }
 
@@ -206,7 +287,8 @@ impl Shape {
         match self {
             Shape::Sphere(s) => &s.common.inv,
             Shape::Plane(p) => &p.common.inv,
-            Shape::Cube(c) => &c.common.inv
+            Shape::Cube(c) => &c.common.inv,
+            Shape::Cylinder(c) => &c.common.inv
         }
     }
 }
@@ -229,5 +311,12 @@ impl From<Cube> for Shape {
 
     fn from(c: Cube) -> Self {
         Shape::Cube(c)
+    }
+}
+
+impl From<Cylinder> for Shape {
+
+    fn from(c: Cylinder) -> Self {
+        Shape::Cylinder(c)
     }
 }

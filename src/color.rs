@@ -18,6 +18,13 @@ pub struct Color {
 
 impl Color {
 
+    const fn hex(value: i32) -> Self {
+        let r = ((value >> 16) & 0xFF) as f32 / 255.0;
+        let g = ((value >> 8) & 0xFF) as f32 / 255.0;
+        let b = (value & 0xFF) as f32 / 255.0;
+        Self { r, g, b }
+    }
+
     #[inline]
     pub fn srgb8(self) -> [u8; 3] {
         fn enc(x: f32) -> u8 {
@@ -36,6 +43,7 @@ impl Color {
     pub const RED: Color = Color{r: 1.0, g: 0.0, b: 0.0};
     pub const GREEN: Color = Color{r: 0.0, g: 1.0, b: 0.0};
     pub const BLUE: Color = Color{r: 0.0, g: 0.0, b: 1.0};
+    pub const ALICE_BLUE: Color = Color::hex(0xF0F8FF);
 
     pub const YELLOW: Color = Color{r: 1.0, g: 1.0, b: 0.0};
     pub const CYAN: Color = Color{r: 0.0, g: 1.0, b: 1.0};
