@@ -1,22 +1,25 @@
-
-use crate::ray::Ray;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
+use crate::ray::Ray;
 
-use glam::Vec3A;
 use glam::Affine3A;
 use glam::Mat3A;
+use glam::Vec3A;
 
 use std::convert::From;
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static NEXT_SHAPE_ID: AtomicUsize = AtomicUsize::new(1);
+
 struct ShapeCommon {
     inv: Affine3A,
-    inv_tr: Mat3A
+    inv_tr: Mat3A,
+    id: usize
 }
 
 trait LocalShape {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize);
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer);
     fn local_normal(&self, point: Vec3A) -> Vec3A;
 }
 
@@ -25,15 +28,22 @@ impl ShapeCommon {
     fn new(transform: &Affine3A) -> Self {
         let inv = transform.inverse();
         let inv_tr = inv.matrix3.transpose();
+        let id = NEXT_SHAPE_ID.fetch_add(1, Ordering::Relaxed);
         Self {
             inv: inv,
-            inv_tr: inv_tr
+            inv_tr: inv_tr,
+            id: id
         }
     }
 
-    fn intersect(&self, local: &dyn LocalShape, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn intersect(
+        &self,
+        local: &dyn LocalShape,
+        ray: &Ray,
+        buffer: &mut IntersectionBuffer,
+    ) {
         let transformed_ray = &self.inv * ray;
-        local.local_intersect(&transformed_ray, buffer, index);
+        local.local_intersect(&transformed_ray, buffer);
     }
 
     fn normal(&self, local: &dyn LocalShape, point: Vec3A) -> Vec3A {
@@ -46,22 +56,20 @@ impl ShapeCommon {
 
 pub struct Sphere {
     common: ShapeCommon,
-    material: Material
+    material: Material,
 }
 
 impl Sphere {
-
     pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
-            material: material
+            material: material,
         }
     }
 }
 
 impl LocalShape for Sphere {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
         let sphere_to_ray = ray.origin;
         let a = ray.direction.dot(ray.direction);
         let b = 2.0 * ray.direction.dot(sphere_to_ray);
@@ -75,8 +83,14 @@ impl LocalShape for Sphere {
         let t0 = (-b - sd) / (2.0 * a);
         let t1 = (-b + sd) / (2.0 * a);
 
-        buffer.add(Intersection{ shape_index: index, t: t0});
-        buffer.add(Intersection{ shape_index: index, t: t1});
+        buffer.add(Intersection {
+            shape_id: self.common.id,
+            t: t0,
+        });
+        buffer.add(Intersection {
+            shape_id: self.common.id,
+            t: t1,
+        });
     }
 
     fn local_normal(&self, point: Vec3A) -> Vec3A {
@@ -86,27 +100,28 @@ impl LocalShape for Sphere {
 
 pub struct Plane {
     common: ShapeCommon,
-    material: Material
+    material: Material,
 }
 
 impl Plane {
-
     pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
-            material: material
+            material: material,
         }
     }
 }
 
 impl LocalShape for Plane {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
         if ray.direction.y.abs() < 1e-5 {
             return;
         }
         let t = -ray.origin.y / ray.direction.y;
-        buffer.add(Intersection{shape_index: index, t: t});
+        buffer.add(Intersection {
+            shape_id: self.common.id,
+            t: t,
+        });
     }
 
     fn local_normal(&self, _point: Vec3A) -> Vec3A {
@@ -116,15 +131,14 @@ impl LocalShape for Plane {
 
 pub struct Cube {
     common: ShapeCommon,
-    material: Material
+    material: Material,
 }
 
 impl Cube {
-
     pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
-            material: material
+            material: material,
         }
     }
 
@@ -142,16 +156,23 @@ impl Cube {
 }
 
 impl LocalShape for Cube {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
         let (xtmin, xtmax) = Self::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
         let (ytmin, ytmax) = Self::check_axis(ray.origin.y, ray.direction.y, -1.0, 1.0);
         let (ztmin, ztmax) = Self::check_axis(ray.origin.z, ray.direction.z, -1.0, 1.0);
         let tmin = xtmin.max(ytmin).max(ztmin);
         let tmax = xtmax.min(ytmax).min(ztmax);
-        if tmin > tmax { return; }
-        buffer.add(Intersection{shape_index: index, t: tmin});
-        buffer.add(Intersection{shape_index: index, t: tmax});
+        if tmin > tmax {
+            return;
+        }
+        buffer.add(Intersection {
+            shape_id: self.common.id,
+            t: tmin,
+        });
+        buffer.add(Intersection {
+            shape_id: self.common.id,
+            t: tmax,
+        });
     }
 
     fn local_normal(&self, point: Vec3A) -> Vec3A {
@@ -174,19 +195,20 @@ pub struct Cylinder {
     common: ShapeCommon,
     material: Material,
     range: (f32, f32),
-    caps: bool
+    caps: bool,
 }
 
 trait Caps {
-
     fn caps(&self) -> bool;
     fn from(&self) -> f32;
     fn to(&self) -> f32;
 
     #[inline]
-    fn cap_radius2_at(&self, _y: f32) -> f32 { 1.0 }
+    fn cap_radius2_at(&self, _y: f32) -> f32 {
+        1.0
+    }
 
-    fn intersect_caps(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn intersect_caps(&self, ray: &Ray, buffer: &mut IntersectionBuffer, id: usize) {
         if !self.caps() || ray.direction.y.abs() < 1e-6 {
             return; // no caps or parallel to cap planes
         }
@@ -200,7 +222,10 @@ trait Caps {
             let x = ray.origin.x + t0 * ray.direction.x;
             let z = ray.origin.z + t0 * ray.direction.z;
             if x * x + z * z <= self.cap_radius2_at(y0) + 1e-6 {
-                buffer.add(Intersection { shape_index: index, t: t0 });
+                buffer.add(Intersection {
+                    shape_id: id,
+                    t: t0,
+                });
             }
         }
 
@@ -211,26 +236,27 @@ trait Caps {
             let x = ray.origin.x + t1 * ray.direction.x;
             let z = ray.origin.z + t1 * ray.direction.z;
             if x * x + z * z <= self.cap_radius2_at(y1) + 1e-6 {
-                buffer.add(Intersection { shape_index: index, t: t1 });
+                buffer.add(Intersection {
+                    shape_id: id,
+                    t: t1,
+                });
             }
         }
     }
 }
 
 impl Cylinder {
-
     pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
         Self {
             common: ShapeCommon::new(tr),
             material: material,
             range: range,
-            caps: caps
+            caps: caps,
         }
     }
 }
 
 impl Caps for Cylinder {
-
     #[inline]
     fn caps(&self) -> bool {
         self.caps
@@ -248,27 +274,36 @@ impl Caps for Cylinder {
 }
 
 impl LocalShape for Cylinder {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
-        self.intersect_caps(ray, buffer, index);
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        self.intersect_caps(ray, buffer, self.common.id);
         let o = ray.origin;
         let d = ray.direction;
         let a = d.x * d.x + d.z * d.z;
-        if a.abs() < 1e-6 { return; }
+        if a.abs() < 1e-6 {
+            return;
+        }
         let b = 2.0 * o.x * d.x + 2.0 * o.z * d.z;
         let c = o.x * o.x + o.z * o.z - 1.0;
         let disc = b * b - 4.0 * a * c;
-        if disc < 0.0 { return; }
+        if disc < 0.0 {
+            return;
+        }
         let sd = disc.sqrt();
         let t0 = (-b - sd) / (2.0 * a);
         let mut y0 = o.y + t0 * d.y;
         if self.range.0 < y0 && y0 < self.range.1 {
-            buffer.add(Intersection{shape_index: index, t: t0});
+            buffer.add(Intersection {
+                shape_id: self.common.id,
+                t: t0,
+            });
         }
         let t1 = (-b + sd) / (2.0 * a);
         y0 = o.y + t1 * d.y;
         if self.range.0 < y0 && y0 < self.range.1 {
-            buffer.add(Intersection{shape_index: index, t: t1});
+            buffer.add(Intersection {
+                shape_id: self.common.id,
+                t: t1,
+            });
         }
     }
 
@@ -288,23 +323,21 @@ pub struct Cone {
     common: ShapeCommon,
     material: Material,
     range: (f32, f32),
-    caps: bool
+    caps: bool,
 }
 
 impl Cone {
-
     pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
         Self {
             common: ShapeCommon::new(tr),
             material: material,
             range: range,
-            caps: caps
+            caps: caps,
         }
     }
 }
 
 impl Caps for Cone {
-
     #[inline]
     fn caps(&self) -> bool {
         self.caps
@@ -327,10 +360,9 @@ impl Caps for Cone {
 }
 
 impl LocalShape for Cone {
-
-    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
-       // caps first (fine either order)
-        self.intersect_caps(ray, buffer, index);
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        // caps first (fine either order)
+        self.intersect_caps(ray, buffer, self.common.id);
 
         let o = ray.origin;
         let d = ray.direction;
@@ -348,14 +380,17 @@ impl LocalShape for Cone {
                 // No intersection (ray parallel to the cone asymptote and offset)
                 return;
             }
-            let t = -c / b; // ✅ correct linear solution
+            let t = -c / b;
             if t >= 0.0 {
-                let y = o.y + t * d.y; // ✅ y(t)
+                let y = o.y + t * d.y;
                 if self.range.0 < y && y < self.range.1 {
-                    buffer.add(Intersection { shape_index: index, t });
+                    buffer.add(Intersection {
+                        shape_id: self.common.id,
+                        t,
+                    });
                 }
             }
-            return; // ✅ don’t fall through
+            return;
         }
 
         // Quadratic
@@ -376,17 +411,23 @@ impl LocalShape for Cone {
 
         // First root
         if t0 >= 0.0 {
-            let y0 = o.y + t0 * d.y; // ✅ correct
+            let y0 = o.y + t0 * d.y;
             if self.range.0 < y0 && y0 < self.range.1 {
-                buffer.add(Intersection { shape_index: index, t: t0 });
+                buffer.add(Intersection {
+                    shape_id: self.common.id,
+                    t: t0,
+                });
             }
         }
 
         // Second root
         if t1 >= 0.0 {
-            let y1 = o.y + t1 * d.y; // ✅ correct
+            let y1 = o.y + t1 * d.y;
             if self.range.0 < y1 && y1 < self.range.1 {
-                buffer.add(Intersection { shape_index: index, t: t1 });
+                buffer.add(Intersection {
+                    shape_id: self.common.id,
+                    t: t1,
+                });
             }
         }
     }
@@ -415,8 +456,42 @@ impl LocalShape for Cone {
 
         // Side normal
         let mut y = (distance).sqrt();
-        if p.y > 0.0 { y = -y; } // matches RTC convention
+        if p.y > 0.0 {
+            y = -y;
+        } // matches RTC convention
         glam::vec3a(p.x, y, p.z).normalize()
+    }
+}
+
+pub struct Group {
+    common: ShapeCommon,
+    children: Vec<Shape>
+}
+
+impl Group {
+
+    pub fn new(tr: &Affine3A) -> Self {
+        Self {
+            common: ShapeCommon::new(tr),
+            children: vec![]
+        }
+    }
+
+    pub fn add(&mut self, shape: Shape) {
+        self.children.push(shape);
+    }
+}
+
+impl LocalShape for Group {
+
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        for child in self.children.iter() {
+            child.intersect(ray, buffer);
+        }
+    }
+
+    fn local_normal(&self, point: Vec3A) -> Vec3A {
+        Vec3A::ZERO
     }
 }
 
@@ -425,18 +500,31 @@ pub enum Shape {
     Plane(Plane),
     Cube(Cube),
     Cylinder(Cylinder),
-    Cone(Cone)
+    Cone(Cone),
+    Group(Group)
 }
 
 impl Shape {
 
-    pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
+    fn common(&self) -> &ShapeCommon {
         match self {
-            Shape::Sphere(s) => s.common.intersect(s, ray, buffer, index),
-            Shape::Plane(p) => p.common.intersect(p, ray, buffer, index),
-            Shape::Cube(c) => c.common.intersect(c, ray, buffer, index),
-            Shape::Cylinder(c) => c.common.intersect(c, ray, buffer, index),
-            Shape::Cone(c) => c.common.intersect(c, ray, buffer, index)
+            Shape::Sphere(s) => &s.common,
+            Shape::Plane(p) => &p.common,
+            Shape::Cube(c) => &c.common,
+            Shape::Cylinder(c) => &c.common,
+            Shape::Cone(c) => &c.common,
+            Shape::Group(g) => &g.common
+        }
+    }
+
+    pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        match self {
+            Shape::Sphere(s) => s.common.intersect(s, ray, buffer),
+            Shape::Plane(p) => p.common.intersect(p, ray, buffer),
+            Shape::Cube(c) => c.common.intersect(c, ray, buffer),
+            Shape::Cylinder(c) => c.common.intersect(c, ray, buffer),
+            Shape::Cone(c) => c.common.intersect(c, ray, buffer),
+            Shape::Group(g) => g.common.intersect(g, ray, buffer)
         }
     }
 
@@ -446,7 +534,8 @@ impl Shape {
             Shape::Plane(p) => p.common.normal(p, point),
             Shape::Cube(c) => c.common.normal(c, point),
             Shape::Cylinder(c) => c.common.normal(c, point),
-            Shape::Cone(c) => c.common.normal(c, point)
+            Shape::Cone(c) => c.common.normal(c, point),
+            Shape::Group(g) => g.common.normal(g, point)
         }
     }
 
@@ -456,18 +545,13 @@ impl Shape {
             Shape::Plane(p) => &p.material,
             Shape::Cube(c) => &c.material,
             Shape::Cylinder(c) => &c.material,
-            Shape::Cone(c) => &c.material
+            Shape::Cone(c) => &c.material,
+            Shape::Group(g) => g.children[0].material()
         }
     }
 
     pub fn inv(&self) -> &Affine3A {
-        match self {
-            Shape::Sphere(s) => &s.common.inv,
-            Shape::Plane(p) => &p.common.inv,
-            Shape::Cube(c) => &c.common.inv,
-            Shape::Cylinder(c) => &c.common.inv,
-            Shape::Cone(c) => &c.common.inv
-        }
+        &self.common().inv
     }
 
     pub fn max_intersections(&self) -> usize {
@@ -476,42 +560,67 @@ impl Shape {
             Shape::Plane(_) => 1,
             Shape::Cube(_) => 2,
             Shape::Cylinder(_) => 2,
-            Shape::Cone(_) => 4
+            Shape::Cone(_) => 4,
+            Shape::Group(g) => g.children.iter().map(|c| c.max_intersections()).sum()
         }
+    }
+
+    pub fn check_id(&self, id: usize) -> bool {
+        match self {
+            Shape::Sphere(s) => s.common.id == id,
+            Shape::Plane(p) => p.common.id == id,
+            Shape::Cube(c) => c.common.id == id,
+            Shape::Cylinder(c) => c.common.id == id,
+            Shape::Cone(c) => c.common.id == id,
+            Shape::Group(g) => g.common.id == id || g.children.iter().any(|c| c.check_id(id))
+        }
+    }
+
+    pub fn find_by_id(&self, id: usize) -> Option<&Shape> {
+        if self.common().id == id {
+            return Some(self);
+        }
+        if let Shape::Group(g) = self {
+            // try children recursively and return the first match
+            return g.children.iter().find_map(|c| c.find_by_id(id));
+        }
+        None
     }
 }
 
 impl From<Sphere> for Shape {
-
     fn from(s: Sphere) -> Self {
         Shape::Sphere(s)
     }
 }
 
 impl From<Plane> for Shape {
-
     fn from(p: Plane) -> Self {
         Shape::Plane(p)
     }
 }
 
 impl From<Cube> for Shape {
-
     fn from(c: Cube) -> Self {
         Shape::Cube(c)
     }
 }
 
 impl From<Cylinder> for Shape {
-
     fn from(c: Cylinder) -> Self {
         Shape::Cylinder(c)
     }
 }
 
 impl From<Cone> for Shape {
-
     fn from(c: Cone) -> Self {
         Shape::Cone(c)
+    }
+}
+
+impl From<Group> for Shape {
+
+    fn from(g: Group) -> Self {
+        Shape::Group(g)
     }
 }

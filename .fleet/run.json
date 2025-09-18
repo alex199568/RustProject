@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "type": "cargo",
+            "name": "Cargo Run Release",
+            "cargoArgs": [
+                "run",
+                "--release"
+            ],
+        }
+    ]
+}

@@ -26,28 +26,29 @@ impl Scene {
     fn intersect(&self, ray: &Ray, intersections: &mut IntersectionBuffer) {
         intersections.clear();
         for (i, shape) in self.shapes.iter().enumerate() {
-            shape.intersect(ray, intersections, i);
+            shape.intersect(ray, intersections);
         }
     }
 
     fn shadow_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, ignore: usize) {
         buffer.clear();
-        for (i, shape) in self.shapes.iter().enumerate() {
-            if i != ignore {
-                shape.intersect(ray, buffer, i);
+        for shape in self.shapes.iter() {
+            if !shape.check_id(ignore) {
+                shape.intersect(ray, buffer)
             }
         }
     }
 
-    fn shadow(&self, light: &Light, shape_index: usize, point: Vec3A, buffer: &mut IntersectionBuffer) -> f32 {
+    fn shadow(&self, light: &Light, shape_id: usize, point: Vec3A, buffer: &mut IntersectionBuffer) -> f32 {
         let v = light.position - point;
         let distance = v.length();
         let direction = v / distance;
         let r = Ray { origin: point, direction: direction };
-        self.shadow_intersect(&r, buffer, shape_index);
+        self.shadow_intersect(&r, buffer, shape_id);
         if let Some(hit) = buffer.hit() {
             return if hit.t < distance {
-                let transparency = self.shapes[hit.shape_index].material().transparency;
+                let s = self.find_shape_by_id(shape_id);
+                let transparency = s.material().transparency;
                 1.0 - transparency
             } else {
                 0.0
@@ -60,7 +61,7 @@ impl Scene {
         let mut surface = Color{r: 0.0, g: 0.0, b: 0.0};
 
         for light in &self.lights {
-            let s = self.shadow(light, hit.shape_index, hit.point, buffer);
+            let s = self.shadow(light, hit.shape_id, hit.point, buffer);
             let c = light.shade(shape, hit, s);
             surface += c;
         }
@@ -80,7 +81,7 @@ impl Scene {
         for i in buffer.intersections.iter() {
             // Is this the intersection we're computing for?
             let is_hit =
-                i.shape_index == hit.shape_index && (i.t - hit.t).abs() < 1e-6;
+                i.shape_id == hit.shape_id && (i.t - hit.t).abs() < 1e-6;
 
             // n1: IOR before toggling membership
             if is_hit {
@@ -88,12 +89,12 @@ impl Scene {
                     1.0
                 } else {
                     let s = containers.last().unwrap();
-                    self.shapes[*s].material().refraction // or .refractive_index / ior
+                    self.find_shape_by_id(*s).material().refraction // or .refractive_index / ior
                 };
             }
 
             // Toggle membership of this shape
-            let sid = i.shape_index;
+            let sid = i.shape_id;
             if let Some(pos) = containers.iter().position(|&x| x == sid) {
                 containers.remove(pos);
             } else {
@@ -106,7 +107,7 @@ impl Scene {
                     1.0
                 } else {
                     let s = containers.last().unwrap();
-                    self.shapes[*s].material().refraction
+                    self.find_shape_by_id(*s).material().refraction
                 };
                 break;
             }
@@ -118,6 +119,10 @@ impl Scene {
     fn schlick_ior(cos_i: f32, n1: f32, n2: f32) -> f32 {
         let f0 = ((n1 - n2)/(n1 + n2)).powi(2);
         f0 + (1.0 - f0) * (1.0 - cos_i).powi(5)
+    }
+
+    fn find_shape_by_id(&self, id: usize) -> &Shape {
+        self.shapes.iter().find_map(|s| s.find_by_id(id)).unwrap()
     }
     
     pub fn color(&self, ray0: &Ray, buf: &mut IntersectionBuffer, max_depth: usize) -> Color {
@@ -136,7 +141,7 @@ impl Scene {
                 continue;
             };
 
-            let shape = &self.shapes[hit.shape_index];
+            let shape = self.find_shape_by_id(hit.shape_id);
             let h = Hit::new(shape, hit, &ray);
 
             // --- local lighting (non-transmitted part) ---

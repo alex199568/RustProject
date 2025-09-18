@@ -7,7 +7,7 @@ use glam::Vec3A;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
-    pub shape_index: usize,
+    pub shape_id: usize,
     pub t: f32
 }
 
@@ -41,7 +41,7 @@ impl IntersectionBuffer {
 }
 
 pub struct Hit {
-    pub shape_index: usize,
+    pub shape_id: usize,
     pub point: Vec3A,
     pub eye: Vec3A,
     pub normal: Vec3A,
@@ -65,7 +65,7 @@ impl Hit {
         let reflect = ray.direction.reflect(normal);
 
         Self {
-            shape_index: intersection.shape_index,
+            shape_id: intersection.shape_id,
             point: point,
             eye: eye,
             normal: normal,
