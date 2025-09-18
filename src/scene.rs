@@ -4,9 +4,10 @@ use crate::Light;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
 use crate::intersection::Hit;
-use crate::point::Point;
 use crate::ray::Ray;
 use crate::color::Color;
+
+use glam::Vec3A;
 
 pub struct Scene {
     shapes: Vec<Shape>,
@@ -38,7 +39,7 @@ impl Scene {
         }
     }
 
-    fn shadow(&self, light: &Light, shape_index: usize, point: Point, buffer: &mut IntersectionBuffer) -> f32 {
+    fn shadow(&self, light: &Light, shape_index: usize, point: Vec3A, buffer: &mut IntersectionBuffer) -> f32 {
         let v = light.position - point;
         let distance = v.length();
         let direction = v / distance;
@@ -174,7 +175,7 @@ impl Scene {
                     let cos_t = (1.0 - sin2t).sqrt();
                     // refract dir = n*(n_ratio*cos_i - cos_t) - v*n_ratio, where v = view = -ray.dir
                     let refr_dir = h.normal * (n_ratio * cos_i - cos_t) - h.eye * n_ratio;
-                    let r = Ray { origin: h.under_point + refr_dir * 1e-4, direction: refr_dir.unit() };
+                    let r = Ray { origin: h.under_point + refr_dir * 1e-4, direction: refr_dir.normalize() };
                     stack.push((r, refr_w, depth + 1));
                 } else {
                     // total internal reflection -> reflection already spawned above carries the energy

@@ -1,29 +1,30 @@
 
-use crate::matrix::Matrix;
-use crate::point::Point;
-use crate::vector::Vector;
 use crate::ray::Ray;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
 
+use glam::Vec3A;
+use glam::Affine3A;
+use glam::Mat3A;
+
 use std::convert::From;
 
 struct ShapeCommon {
-    inv: Matrix<4>,
-    inv_tr: Matrix<4>
+    inv: Affine3A,
+    inv_tr: Mat3A
 }
 
 trait LocalShape {
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize);
-    fn local_normal(&self, point: Point) -> Vector;
+    fn local_normal(&self, point: Vec3A) -> Vec3A;
 }
 
 impl ShapeCommon {
 
-    fn new(transform: &Matrix<4>) -> Self {
+    fn new(transform: &Affine3A) -> Self {
         let inv = transform.inverse();
-        let inv_tr = inv.transpose();
+        let inv_tr = inv.matrix3.transpose();
         Self {
             inv: inv,
             inv_tr: inv_tr
@@ -35,11 +36,11 @@ impl ShapeCommon {
         local.local_intersect(&transformed_ray, buffer, index);
     }
 
-    fn normal(&self, local: &dyn LocalShape, point: Point) -> Vector {
-        let shape_point = &self.inv * point;
-        let shape_normal = local.local_normal(shape_point);
+    fn normal(&self, local: &dyn LocalShape, point: Vec3A) -> Vec3A {
+        let shape_point = &self.inv.transform_point3a(point);
+        let shape_normal = local.local_normal(*shape_point);
         let world_normal = &self.inv_tr * shape_normal;
-        world_normal.unit()
+        world_normal.normalize()
     }
 }
 
@@ -50,7 +51,7 @@ pub struct Sphere {
 
 impl Sphere {
 
-    pub fn new(transform: &Matrix<4>, material: Material) -> Self {
+    pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
             material: material
@@ -61,7 +62,7 @@ impl Sphere {
 impl LocalShape for Sphere {
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, index: usize) {
-        let sphere_to_ray = ray.origin - Point::ZERO;
+        let sphere_to_ray = ray.origin;
         let a = ray.direction.dot(ray.direction);
         let b = 2.0 * ray.direction.dot(sphere_to_ray);
         let c = sphere_to_ray.dot(sphere_to_ray) - 1.0;
@@ -78,8 +79,8 @@ impl LocalShape for Sphere {
         buffer.add(Intersection{ shape_index: index, t: t1});
     }
 
-    fn local_normal(&self, point: Point) -> Vector {
-        point - Point::ZERO
+    fn local_normal(&self, point: Vec3A) -> Vec3A {
+        point
     }
 }
 
@@ -90,7 +91,7 @@ pub struct Plane {
 
 impl Plane {
 
-    pub fn new(transform: &Matrix<4>, material: Material) -> Self {
+    pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
             material: material
@@ -108,8 +109,8 @@ impl LocalShape for Plane {
         buffer.add(Intersection{shape_index: index, t: t});
     }
 
-    fn local_normal(&self, _point: Point) -> Vector {
-        Vector::Y
+    fn local_normal(&self, _point: Vec3A) -> Vec3A {
+        Vec3A::Y
     }
 }
 
@@ -120,7 +121,7 @@ pub struct Cube {
 
 impl Cube {
 
-    pub fn new(transform: &Matrix<4>, material: Material) -> Self {
+    pub fn new(transform: &Affine3A, material: Material) -> Self {
         Self {
             common: ShapeCommon::new(transform),
             material: material
@@ -153,19 +154,19 @@ impl LocalShape for Cube {
         buffer.add(Intersection{shape_index: index, t: tmax});
     }
 
-    fn local_normal(&self, point: Point) -> Vector {
+    fn local_normal(&self, point: Vec3A) -> Vec3A {
         let x = point.x.abs();
         let y = point.y.abs();
         let z = point.z.abs();
         let maxc = x.max(y).max(z);
         if (maxc - x) < 1e-6 {
-            return Vector{x: point.x, y: 0.0, z: 0.0};
+            return glam::vec3a(point.x, 0.0, 0.0);
         }
         if (maxc - y) < 1e-6 {
-            return Vector{x: 0.0, y: point.y, z: 0.0};
+            return glam::vec3a(0.0, point.y, 0.0);
         }
 
-        Vector {x: 0.0, y: 0.0, z: point.z}
+        glam::vec3a(0.0, 0.0, point.z)
     }
 }
 
@@ -185,7 +186,7 @@ impl Shape {
         }
     }
 
-    pub fn normal(&self, point: Point) -> Vector {
+    pub fn normal(&self, point: Vec3A) -> Vec3A {
         match self {
             Shape::Sphere(s) => s.common.normal(s, point),
             Shape::Plane(p) => p.common.normal(p, point),
@@ -201,7 +202,7 @@ impl Shape {
         }
     }
 
-    pub fn inv(&self) -> &Matrix<4> {
+    pub fn inv(&self) -> &Affine3A {
         match self {
             Shape::Sphere(s) => &s.common.inv,
             Shape::Plane(p) => &p.common.inv,

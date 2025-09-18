@@ -1,9 +1,9 @@
 
 
-use crate::vector::Vector;
-use crate::point::Point;
 use crate::ray::Ray;
 use crate::shape::Shape;
+
+use glam::Vec3A;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
@@ -42,12 +42,12 @@ impl IntersectionBuffer {
 
 pub struct Hit {
     pub shape_index: usize,
-    pub point: Point,
-    pub eye: Vector,
-    pub normal: Vector,
-    pub over_point: Point,
-    pub under_point: Point,
-    pub reflect: Vector,
+    pub point: Vec3A,
+    pub eye: Vec3A,
+    pub normal: Vec3A,
+    pub over_point: Vec3A,
+    pub under_point: Vec3A,
+    pub reflect: Vec3A,
 }
 
 impl Hit {

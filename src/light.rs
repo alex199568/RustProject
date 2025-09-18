@@ -1,11 +1,12 @@
 
-use crate::point::Point;
 use crate::color::Color;
 use crate::shape::Shape;
 use crate::intersection::Hit;
 
+use glam::Vec3A;
+
 pub struct Light {
-    pub position: Point,
+    pub position: Vec3A,
     pub intensity: Color
 }
 
@@ -19,7 +20,8 @@ impl Light {
         };
 
         let effective_color = material_color * self.intensity * (1.0 - shadow);
-        let light_v = (self.position - hit.point).unit();
+        
+        let light_v = (self.position - hit.point).normalize();
         let ambient= effective_color * material.ambient;
         let light_dot_normal = light_v.dot(hit.normal);
         if light_dot_normal < 0.0 {

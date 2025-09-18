@@ -1,32 +1,33 @@
 
 use crate::color::Color;
-use crate::point::Point;
-use crate::matrix::Matrix;
+
+use glam::Vec3A;
+use glam::Affine3A;
 
 use std::convert::From;
 
 struct PatternCommon {
-    inv: Matrix<4>
+    inv: Affine3A
 }
 
 impl PatternCommon {
 
-    fn new(transform: &Matrix<4>) -> Self {
+    fn new(transform: &Affine3A) -> Self {
         Self {
             inv: transform.inverse()
         }
     }
 
-    fn at(&self, local: &dyn LocalPattern, shape_inv: &Matrix<4>, point: Point) -> Color {
-        let shape_point = shape_inv * point;
-        let pattern_point = &self.inv * shape_point;
-        local.local_at(pattern_point)
+    fn at(&self, local: &dyn LocalPattern, shape_inv: &Affine3A, point: Vec3A) -> Color {
+        let shape_point = shape_inv.transform_point3a(point);
+        let pattern_point = &self.inv.transform_point3a(shape_point);
+        local.local_at(*pattern_point)
     }
 }
 
 trait LocalPattern {
 
-    fn local_at(&self, point: Point) -> Color;
+    fn local_at(&self, point: Vec3A) -> Color;
 }
 
 pub struct Stripes {
@@ -37,7 +38,7 @@ pub struct Stripes {
 
 impl Stripes {
 
-    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+    pub fn new(transform: &Affine3A, a: Color, b: Color) -> Self {
         Self {
             common: PatternCommon::new(transform),
             a: a,
@@ -48,7 +49,7 @@ impl Stripes {
 
 impl LocalPattern for Stripes {
 
-    fn local_at(&self, point: Point) -> Color {
+    fn local_at(&self, point: Vec3A) -> Color {
         if point.x.floor() as i32 % 2 == 0 {
             self.a
         } else {
@@ -65,7 +66,7 @@ pub struct Gradient {
 
 impl Gradient {
 
-    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+    pub fn new(transform: &Affine3A, a: Color, b: Color) -> Self {
         Self {
             common: PatternCommon::new(transform),
             a: a,
@@ -76,7 +77,7 @@ impl Gradient {
 
 impl LocalPattern for Gradient {
 
-    fn local_at(&self, point: Point) -> Color {
+    fn local_at(&self, point: Vec3A) -> Color {
         self.a + (self.b - self.a) * (point.x - point.x.floor())
     }
 }
@@ -89,7 +90,7 @@ pub struct Rings {
 
 impl Rings {
 
-    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+    pub fn new(transform: &Affine3A, a: Color, b: Color) -> Self {
         Self {
             common: PatternCommon::new(transform),
             a: a,
@@ -100,7 +101,7 @@ impl Rings {
 
 impl LocalPattern for Rings {
 
-    fn local_at(&self, point: Point) -> Color {
+    fn local_at(&self, point: Vec3A) -> Color {
         if (point.x * point.x + point.z * point.z).sqrt().floor() as i32 % 2 == 0 {
             self.a
         } else {
@@ -117,7 +118,7 @@ pub struct Checkers {
 
 impl Checkers {
 
-    pub fn new(transform: &Matrix<4>, a: Color, b: Color) -> Self {
+    pub fn new(transform: &Affine3A, a: Color, b: Color) -> Self {
         Self {
             common: PatternCommon::new(transform),
             a: a,
@@ -128,7 +129,7 @@ impl Checkers {
 
 impl LocalPattern for Checkers {
 
-    fn local_at(&self, point: Point) -> Color {
+    fn local_at(&self, point: Vec3A) -> Color {
         if (point.x.round() + point.y.round() + point.z.round()) as i32 % 2 == 0 {
             self.a
         } else {
@@ -146,7 +147,7 @@ pub enum Pattern {
 
 impl Pattern {
 
-    pub fn at(&self, shape_inv: &Matrix<4>, point: Point) -> Color {
+    pub fn at(&self, shape_inv: &Affine3A, point: Vec3A) -> Color {
         match self {
             Pattern::Stripes(s) => s.common.at(s, shape_inv, point),
             Pattern::Gradient(g) => g.common.at(g, shape_inv, point),
