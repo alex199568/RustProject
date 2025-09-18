@@ -2,6 +2,7 @@ use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::scene::Scene;
+use crate::aabb::Aabb;
 
 use glam::Affine3A;
 use glam::Mat3A;
@@ -15,10 +16,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_SHAPE_ID: AtomicUsize = AtomicUsize::new(1);
 
 struct ShapeCommon {
+    tr: Affine3A,
     inv: Affine3A,
     inv_tr: Mat3A,
     id: usize,
-    parent_id: Option<usize>
+    parent_id: Option<usize>,
+    aabb: Aabb
 }
 
 trait LocalShape {
@@ -28,15 +31,17 @@ trait LocalShape {
 
 impl ShapeCommon {
 
-    fn new(transform: &Affine3A) -> Self {
+    fn new(transform: &Affine3A, aabb: Aabb) -> Self {
         let inv = transform.inverse();
         let inv_tr = inv.matrix3.transpose();
         let id = NEXT_SHAPE_ID.fetch_add(1, Ordering::Relaxed);
         Self {
+            tr: *transform,
             inv: inv,
             inv_tr: inv_tr,
             id: id,
-            parent_id: None
+            parent_id: None,
+            aabb: aabb
         }
     }
 
@@ -65,14 +70,19 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(transform: &Affine3A, material: Material) -> Self {
+        let bounds = Aabb::new(
+            glam::vec3a(-1.0, -1.0, -1.0),
+            glam::vec3a(1.0, 1.0, 1.0)
+        );
         Self {
-            common: ShapeCommon::new(transform),
+            common: ShapeCommon::new(transform, bounds),
             material: material,
         }
     }
 }
 
 impl LocalShape for Sphere {
+
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
         let sphere_to_ray = ray.origin;
         let a = ray.direction.dot(ray.direction);
@@ -109,8 +119,12 @@ pub struct Plane {
 
 impl Plane {
     pub fn new(transform: &Affine3A, material: Material) -> Self {
+        let bounds = Aabb::new(
+            glam::vec3a(std::f32::MIN, 0.0, std::f32::MIN),
+            glam::vec3a(std::f32::MAX, 0.0, std::f32::MAX)
+        );
         Self {
-            common: ShapeCommon::new(transform),
+            common: ShapeCommon::new(transform, bounds),
             material: material,
         }
     }
@@ -140,30 +154,22 @@ pub struct Cube {
 
 impl Cube {
     pub fn new(transform: &Affine3A, material: Material) -> Self {
+        let bounds = Aabb::new(
+            glam::vec3a(-1.0, -1.0, -1.0),
+            glam::vec3a(1.0, 1.0, 1.0)
+        );
         Self {
-            common: ShapeCommon::new(transform),
+            common: ShapeCommon::new(transform, bounds),
             material: material,
-        }
-    }
-
-    fn check_axis(o: f32, d: f32, from: f32, to: f32) -> (f32, f32) {
-        let t_min_num = from - o;
-        let t_max_num = to - o;
-        let t_min = t_min_num / d;
-        let t_max = t_max_num / d;
-        if t_min < t_max {
-            (t_min, t_max)
-        } else {
-            (t_max, t_min)
         }
     }
 }
 
 impl LocalShape for Cube {
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
-        let (xtmin, xtmax) = Self::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
-        let (ytmin, ytmax) = Self::check_axis(ray.origin.y, ray.direction.y, -1.0, 1.0);
-        let (ztmin, ztmax) = Self::check_axis(ray.origin.z, ray.direction.z, -1.0, 1.0);
+        let (xtmin, xtmax) = Aabb::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
+        let (ytmin, ytmax) = Aabb::check_axis(ray.origin.y, ray.direction.y, -1.0, 1.0);
+        let (ztmin, ztmax) = Aabb::check_axis(ray.origin.z, ray.direction.z, -1.0, 1.0);
         let tmin = xtmin.max(ytmin).max(ztmin);
         let tmax = xtmax.min(ytmax).min(ztmax);
         if tmin > tmax {
@@ -251,8 +257,12 @@ trait Caps {
 
 impl Cylinder {
     pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
+        let bounds = Aabb::new(
+            glam::vec3a(-1.0, range.0, -1.0),
+            glam::vec3a(1.0, range.1, 1.0)
+        );
         Self {
-            common: ShapeCommon::new(tr),
+            common: ShapeCommon::new(tr, bounds),
             material: material,
             range: range,
             caps: caps,
@@ -332,8 +342,15 @@ pub struct Cone {
 
 impl Cone {
     pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
+        let a = range.0.abs();
+        let b = range.1.abs();
+        let limit = a.max(b);
+        let bounds = Aabb::new(
+            glam::vec3a(-limit, range.0, -limit),
+            glam::vec3a(limit, range.1, limit)
+        );
         Self {
-            common: ShapeCommon::new(tr),
+            common: ShapeCommon::new(tr, bounds),
             material: material,
             range: range,
             caps: caps,
@@ -486,11 +503,16 @@ pub struct Triangle {
 impl Triangle {
 
     pub fn new(material: Material, p1: Vec3A, p2: Vec3A, p3: Vec3A) -> Self {
+        let mut bounds = Aabb::default();
+        bounds += p1;
+        bounds += p2;
+        bounds += p3;
+
         let e1 = p2 - p1;
         let e2 = p3 - p1;
         let n = e2.cross(e1);
         Self {
-            common: ShapeCommon::new(&Affine3A::IDENTITY),
+            common: ShapeCommon::new(&Affine3A::IDENTITY, bounds),
             material: material,
             p1: p1, p2: p2, p3: p3,
             e1: e1, e2: e2,
@@ -504,11 +526,16 @@ impl Triangle {
         p1: Vec3A, p2: Vec3A, p3: Vec3A,
         n1: Option<Vec3A>, n2: Option<Vec3A>, n3: Option<Vec3A>
     ) -> Self {
+        let mut bounds = Aabb::default();
+        bounds += p1;
+        bounds += p2;
+        bounds += p3;
+
         let e1 = p2 - p1;
         let e2 = p3 - p1;
         let n = n1.unwrap_or(e2.cross(e1));
         Self {
-            common: ShapeCommon::new(&Affine3A::IDENTITY),
+            common: ShapeCommon::new(&Affine3A::IDENTITY, bounds),
             material: material,
             p1: p1, p2: p2, p3: p3,
             e1: e1, e2: e2,
@@ -559,22 +586,34 @@ pub struct Group {
 
 impl Group {
 
-    pub fn new(tr: &Affine3A) -> Self {
+    pub fn new(tr: &Affine3A, mut children: Vec<Shape>) -> Self {
+        let mut bounds = Aabb::default();
+        for child in &children {
+            let c = child.common();
+            let bounds_tr = &c.aabb * &c.tr;
+            bounds += &bounds_tr;
+        }
+
+        let common = ShapeCommon::new(tr, bounds);
+        for child in &mut children {
+            child.common_mut().parent_id = Some(common.id)
+        }
         Self {
-            common: ShapeCommon::new(tr),
-            children: vec![]
+            common: common,
+            children: children
         }
     }
 
-    pub fn add(&mut self, mut shape: Shape) {
-        shape.common_mut().parent_id = Some(self.common.id);
-        self.children.push(shape);
-    }
+    // pub fn add(&mut self, mut shape: Shape) {
+    //     shape.common_mut().parent_id = Some(self.common.id);
+    //     self.children.push(shape);
+    // }
 }
 
 impl LocalShape for Group {
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        if !self.common.aabb.intersects(ray) { return; }
         for child in self.children.iter() {
             child.intersect(ray, buffer);
         }

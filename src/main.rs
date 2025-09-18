@@ -1,3 +1,4 @@
+mod aabb;
 mod color;
 mod ray;
 mod intersection;
@@ -36,7 +37,7 @@ fn load_obj(tr: &Affine3A) -> Shape {
             })
         .expect("Failed to load obj");
 
-    let mut result = Group::new(tr);
+    let mut tris: Vec<Shape> = Vec::new();
 
     for model in models.iter() {
         let mesh = &model.mesh;
@@ -92,9 +93,11 @@ fn load_obj(tr: &Affine3A) -> Shape {
                 p0, p1, p2,
                 n1, n2, n3
             );
-            result.add(tri.into());
+            tris.push(tri.into());
         }
     }
+
+    let result = Group::new(tr, tris);
 
     result.into()
 }
@@ -159,23 +162,15 @@ fn main() {
         Affine3A::from_rotation_x(std::f32::consts::FRAC_PI_2);
     let wall3 = Plane::new(&wall3_tr, rings_material);
 
+    let room_shapes = vec![wall1.into(), wall2.into(), wall3.into(), floor.into()];
     let room_affine = Affine3A::from_translation(glam::vec3(0.0, 0.0, 2.0));
-    let mut room_group = Group::new(&room_affine);
-    room_group.add(wall1.into());
-    room_group.add(wall2.into());
-    room_group.add(wall3.into());
-    room_group.add(floor.into());
+    let room_group = Group::new(&room_affine, room_shapes);
 
+    let prim_shapes = vec![s1.into(), s2.into(), s3.into(), cube.into(), cylinder.into(), cone.into()];
     let shapes_affine = 
         Affine3A::from_translation(glam::vec3(-3.0, 0.0, 2.0)) *
         Affine3A::from_scale(glam::vec3(0.5, 0.5, 0.5));
-    let mut shapes_group = Group::new(&shapes_affine);
-    shapes_group.add(s1.into());
-    shapes_group.add(s2.into());
-    shapes_group.add(s3.into());
-    shapes_group.add(cube.into());
-    shapes_group.add(cylinder.into());
-    shapes_group.add(cone.into());
+    let shapes_group = Group::new(&shapes_affine, prim_shapes);
 
     let monkey_affine = 
         Affine3A::from_translation(glam::vec3(0.0, 1.0, 0.0)) *
@@ -246,7 +241,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/monkey.png";
+    let filepath = "renders/monkey_b.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
