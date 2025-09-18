@@ -604,11 +604,85 @@ impl Group {
         }
     }
 
-    // pub fn add(&mut self, mut shape: Shape) {
-    //     shape.common_mut().parent_id = Some(self.common.id);
-    //     self.children.push(shape);
-    // }
+    fn classify(&mut self) -> (Vec<Shape>, Vec<Shape>, Vec<Shape>) {
+        let (leftb, rightb) = self.common.aabb.split();
+
+        let mut left  = Vec::new();
+        let mut right = Vec::new();
+        let mut stay  = Vec::new();
+
+        // Move children out of self
+        for child in std::mem::take(&mut self.children) {
+            let c = child.common();
+            let parent_space_bounds = &c.aabb * &c.tr;
+
+            if leftb.contains_aabb(&parent_space_bounds) {
+                left.push(child);
+            } else if rightb.contains_aabb(&parent_space_bounds) {
+                right.push(child);
+            } else {
+                stay.push(child);
+            }
+        }
+
+        (left, right, stay)
+    }
+
+    fn make_sub_group(&mut self, children: Vec<Shape>) {
+        let mut g = Group::new(&Affine3A::IDENTITY, children);
+        g.common.parent_id = Some(self.common.id);
+        self.children.push(g.into());
+    }
+
+    pub fn divide(&mut self, threshold: usize) {
+        // if fewer than threshold, just recurse into children and stop
+        if self.children.len() < threshold {
+            for child in &mut self.children {
+                child.divide(threshold);
+            }
+            return;
+        }
+
+        let (left, right, mut stay) = self.classify();
+
+        // if split is degenerate, restore children and just recurse
+        if left.is_empty() || right.is_empty() {
+            self.children = stay;
+            self.children.extend(left);
+            self.children.extend(right);
+            for child in &mut self.children {
+                child.divide(threshold);
+            }
+            return;
+        }
+
+        // commit split: keep 'stay', add two subgroups
+        self.children = stay;
+        self.make_sub_group(left);
+        self.make_sub_group(right);
+
+        for child in &mut self.children {
+            child.divide(threshold);
+        }
+    }
 }
+
+/*
+    public override void Divide(int threshold)
+    {
+        if (_children.Count < threshold) { foreach (var s in _children) s.Divide(threshold); return; }
+
+        var (left, right, stay) = Classify();
+        if (left.Count == 0 || right.Count == 0) { foreach (var s in _children) s.Divide(threshold); return; }
+
+        _children.Clear();
+        _children.AddRange(stay);
+        MakeSubGroup(left);
+        MakeSubGroup(right);
+
+        foreach (var s in _children) s.Divide(threshold);
+    }
+*/
 
 impl LocalShape for Group {
 
@@ -757,6 +831,12 @@ impl Shape {
             return g.children.iter().find_map(|c| c.find_by_id(id));
         }
         None
+    }
+
+    fn divide(&mut self, threshold: usize) {
+        if let Shape::Group(g) = self {
+            g.divide(threshold);
+        }
     }
 }
 

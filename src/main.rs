@@ -97,7 +97,8 @@ fn load_obj(tr: &Affine3A) -> Shape {
         }
     }
 
-    let result = Group::new(tr, tris);
+    let mut result = Group::new(tr, tris);
+    result.divide(1);
 
     result.into()
 }
@@ -241,7 +242,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/monkey_b.png";
+    let filepath = "renders/monkey_bd.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

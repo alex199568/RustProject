@@ -54,7 +54,7 @@ impl Aabb {
         self.from.z < p.z && p.z <= self.to.z
     }
 
-    fn contains_aabb(&self, other: &Aabb) -> bool {
+    pub fn contains_aabb(&self, other: &Aabb) -> bool {
         self.contains_point(other.from) && self.contains_point(other.to)
     }
 
@@ -70,7 +70,7 @@ impl Aabb {
         (self.to.z - self.from.z).abs()
     }
 
-    fn split(&self) -> (Aabb, Aabb) {
+    pub fn split(&self) -> (Aabb, Aabb) {
         let dx = self.x();
         let dy = self.y();
         let dz = self.z();
@@ -84,17 +84,17 @@ impl Aabb {
         let mut z1 = self.to.z;
 
         if (greatest - dx).abs() < 1e-6 {
-            let newx = dx / 2.0;
+            let newx = x0 + dx / 2.0;
             x0 = newx;
             x1 = newx;
         }
         else if (greatest - dy) < 1e-6 {
-            let newy = dy / 2.0;
+            let newy = y0 + dy / 2.0;
             y0 = newy;
             y1 = newy;
         }
         else {
-            let newz = dz / 2.0;
+            let newz = z0 + dz / 2.0;
             z0 = newz;
             z1 = newz;
         }
