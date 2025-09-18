@@ -26,6 +26,103 @@ use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
 
+fn load_obj(tr: &Affine3A) -> Shape {
+    let (models, materials) = 
+        tobj::load_obj(
+            "assets/models/monkey/monkey.obj", 
+            &tobj::LoadOptions{
+                triangulate: true,
+                ..Default::default()
+            })
+        .expect("Failed to load obj");
+
+    let mut result = Group::new(tr);
+
+    for model in models.iter() {
+        let mesh = &model.mesh;
+
+        let pos = &mesh.positions;      // len = 3 * num_verts
+        let nrm = &mesh.normals;        // len = 3 * num_verts (or 0)
+        let uv  = &mesh.texcoords;      // len = 2 * num_verts (or 0)
+        let idx = &mesh.indices;        // len = 3 * num_tris
+
+        let num_verts = pos.len() / 3;
+        let has_nrm   = nrm.len() == 3 * num_verts;
+        let has_uv    = uv.len()  == 2 * num_verts;
+
+        // // Pick material (or a default)
+        // let material = model
+        //     .material_id
+        //     .and_then(|i| materials.get(i))
+        //     .map(|m| to_material(m))
+        //     .unwrap_or_else(Material::default);
+
+        // Reserve for fewer reallocations (if you push into a Vec)
+        // scene.shapes.reserve(idx.len() / 3);
+
+        for tri in idx.chunks(3) {
+            let i0 = tri[0] as usize;
+            let i1 = tri[1] as usize;
+            let i2 = tri[2] as usize;
+
+            // positions
+            let p0 = glam::vec3a(pos[3*i0], pos[3*i0+1], pos[3*i0+2]);
+            let p1 = glam::vec3a(pos[3*i1], pos[3*i1+1], pos[3*i1+2]);
+            let p2 = glam::vec3a(pos[3*i2], pos[3*i2+1], pos[3*i2+2]);
+
+            // edges + geometric normal (object space)
+            // let e1 = p1 - p0;
+            // let e2 = p2 - p0;
+            // let n_geom = e1.cross(e2).normalize();
+
+            // // optional per-vertex normals (object space)
+            // let (n1, n2, n3) = if has_nrm {
+            //     (
+            //         Some(Vec3A::new(nrm[3*i0], nrm[3*i0+1], nrm[3*i0+2]).normalize()),
+            //         Some(Vec3A::new(nrm[3*i1], nrm[3*i1+1], nrm[3*i1+2]).normalize()),
+            //         Some(Vec3A::new(nrm[3*i2], nrm[3*i2+1], nrm[3*i2+2]).normalize()),
+            //     )
+            // } else { (None, None, None) };
+
+            // // optional per-vertex UVs
+            // let (uv1, uv2, uv3) = if has_uv {
+            //     (
+            //         Some(Vec2::new(uv[2*i0], uv[2*i0+1])),
+            //         Some(Vec2::new(uv[2*i1], uv[2*i1+1])),
+            //         Some(Vec2::new(uv[2*i2], uv[2*i2+1])),
+            //     )
+            // } else { (None, None, None) };
+
+            // NOTE: for now give triangles identity local transform.
+            // In your grouped setup, the node/group will carry world transforms.
+            // let common = ShapeCommon::new(&Affine3A::IDENTITY);
+
+            // let tri = Triangle {
+            //     common,
+            //     material: material.clone(),   // or store a MaterialId instead of cloning
+            //     p1: p0, p2: p1, p3: p2,
+            //     n: n_geom,
+            //     e1, e2,
+            //     n1, n2, n3,
+            //     uv1, uv2, uv3,
+            // };
+
+            let misty_rose_material = Material::builder().color(Color::MISTY_ROSE).build();
+
+            let tri = Triangle::new(
+                misty_rose_material,
+                p0, p1, p2
+            );
+            result.add(tri.into());
+
+            // scene.shapes.push(Shape::Triangle(tri));
+            // or: group.add(Shape::Triangle(tri)) if you’re parenting under a Group
+        }
+    }
+
+    result.into()
+}
+
 fn main() {
     let red_material = Material::builder().color(Color::RED).build();
     let green_material = Material::builder().color(Color::GREEN).reflection(0.3).refraction(Material::IOR_GLASS).transparency(0.7).build();
@@ -94,7 +191,9 @@ fn main() {
     room_group.add(wall3.into());
     room_group.add(floor.into());
 
-    let shapes_affine = Affine3A::from_scale(glam::vec3(0.7, 0.7, 0.7));
+    let shapes_affine = 
+        Affine3A::from_translation(glam::vec3(-3.0, 0.0, 2.0)) *
+        Affine3A::from_scale(glam::vec3(0.5, 0.5, 0.5));
     let mut shapes_group = Group::new(&shapes_affine);
     shapes_group.add(s1.into());
     shapes_group.add(s2.into());
@@ -103,17 +202,15 @@ fn main() {
     shapes_group.add(cylinder.into());
     shapes_group.add(cone.into());
 
-    let triangle = Triangle::new(
-        misty_rose_material,
-        glam::vec3a(-1.0, 0.0, -2.0),
-        glam::vec3a(1.0, 0.0, -2.0),
-        glam::vec3a(0.0, 1.0, -2.0)
-    );
+    let monkey_affine = 
+        Affine3A::from_translation(glam::vec3(0.0, 1.0, 0.0)) *
+        Affine3A::from_rotation_y(130.0f32.to_radians());
+    let monkey = load_obj(&monkey_affine);
     
     let shapes = vec![ 
         shapes_group.into(),
         room_group.into(),
-        triangle.into()
+        monkey
     ];
 
     let l1_position = glam::vec3a(-10.0, 10.0, -10.0);
@@ -174,7 +271,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/triangle.png";
+    let filepath = "renders/monkey.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)
