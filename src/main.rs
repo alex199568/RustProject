@@ -196,6 +196,7 @@ fn main() {
     };
     let lights = vec![l1, l2];
 
+
     let capacity = shapes.iter().map(|s: &Shape| s.max_intersections()).sum();
     let scene = Scene::new(shapes, lights);
 
@@ -242,7 +243,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/monkey_bd.png";
+    let filepath = "renders/monkey.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

@@ -142,25 +142,17 @@ impl AddAssign<&Aabb> for Aabb {
 impl std::ops::Mul<&Affine3A> for &Aabb {
     type Output = Aabb;
     fn mul(self, m: &Affine3A) -> Aabb {
-        if self.is_empty() { return Aabb::empty(); }     // <-- important
-        let p1 = self.from;
-        let p2 = glam::vec3a(self.from.x, self.from.y, self.to.z);
-        let p3 = glam::vec3a(self.to.x,   self.from.y, self.to.z);
-        let p4 = glam::vec3a(self.to.x,   self.from.y, self.from.z);
-        let p5 = self.to;
-        let p6 = glam::vec3a(self.to.x,   self.to.y,   self.from.z);
-        let p7 = glam::vec3a(self.from.x, self.to.y,   self.from.z);
-        let p8 = glam::vec3a(self.from.x, self.to.y,   self.to.z);
+    let c = (self.from + self.to) * 0.5;
+    let e = (self.to - self.from) * 0.5;
 
-        let mut r = Aabb::empty();
-        r += m.transform_point3a(p1);
-        r += m.transform_point3a(p2);
-        r += m.transform_point3a(p3);
-        r += m.transform_point3a(p4);
-        r += m.transform_point3a(p5);
-        r += m.transform_point3a(p6);
-        r += m.transform_point3a(p7);
-        r += m.transform_point3a(p8);
-        r
+    let mc = m.transform_point3a(c);
+    let A = m.matrix3.abs();
+
+    let me = Vec3A::new(
+        A.x_axis.dot(e),
+        A.y_axis.dot(e),
+        A.z_axis.dot(e),
+    );
+    Aabb::new(mc - me, mc + me)
     }
 }
