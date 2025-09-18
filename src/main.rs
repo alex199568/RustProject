@@ -57,9 +57,6 @@ fn load_obj(tr: &Affine3A) -> Shape {
         //     .map(|m| to_material(m))
         //     .unwrap_or_else(Material::default);
 
-        // Reserve for fewer reallocations (if you push into a Vec)
-        // scene.shapes.reserve(idx.len() / 3);
-
         for tri in idx.chunks(3) {
             let i0 = tri[0] as usize;
             let i1 = tri[1] as usize;
@@ -70,19 +67,14 @@ fn load_obj(tr: &Affine3A) -> Shape {
             let p1 = glam::vec3a(pos[3*i1], pos[3*i1+1], pos[3*i1+2]);
             let p2 = glam::vec3a(pos[3*i2], pos[3*i2+1], pos[3*i2+2]);
 
-            // edges + geometric normal (object space)
-            // let e1 = p1 - p0;
-            // let e2 = p2 - p0;
-            // let n_geom = e1.cross(e2).normalize();
-
             // // optional per-vertex normals (object space)
-            // let (n1, n2, n3) = if has_nrm {
-            //     (
-            //         Some(Vec3A::new(nrm[3*i0], nrm[3*i0+1], nrm[3*i0+2]).normalize()),
-            //         Some(Vec3A::new(nrm[3*i1], nrm[3*i1+1], nrm[3*i1+2]).normalize()),
-            //         Some(Vec3A::new(nrm[3*i2], nrm[3*i2+1], nrm[3*i2+2]).normalize()),
-            //     )
-            // } else { (None, None, None) };
+            let (n1, n2, n3) = if has_nrm {
+                (
+                    Some(glam::vec3a(nrm[3*i0], nrm[3*i0+1], nrm[3*i0+2]).normalize()),
+                    Some(glam::vec3a(nrm[3*i1], nrm[3*i1+1], nrm[3*i1+2]).normalize()),
+                    Some(glam::vec3a(nrm[3*i2], nrm[3*i2+1], nrm[3*i2+2]).normalize()),
+                )
+            } else { (None, None, None) };
 
             // // optional per-vertex UVs
             // let (uv1, uv2, uv3) = if has_uv {
@@ -93,30 +85,14 @@ fn load_obj(tr: &Affine3A) -> Shape {
             //     )
             // } else { (None, None, None) };
 
-            // NOTE: for now give triangles identity local transform.
-            // In your grouped setup, the node/group will carry world transforms.
-            // let common = ShapeCommon::new(&Affine3A::IDENTITY);
-
-            // let tri = Triangle {
-            //     common,
-            //     material: material.clone(),   // or store a MaterialId instead of cloning
-            //     p1: p0, p2: p1, p3: p2,
-            //     n: n_geom,
-            //     e1, e2,
-            //     n1, n2, n3,
-            //     uv1, uv2, uv3,
-            // };
-
             let misty_rose_material = Material::builder().color(Color::MISTY_ROSE).build();
 
-            let tri = Triangle::new(
+            let tri = Triangle::normals(
                 misty_rose_material,
-                p0, p1, p2
+                p0, p1, p2,
+                n1, n2, n3
             );
             result.add(tri.into());
-
-            // scene.shapes.push(Shape::Triangle(tri));
-            // or: group.add(Shape::Triangle(tri)) if you’re parenting under a Group
         }
     }
 
@@ -130,7 +106,6 @@ fn main() {
     let cyan_material = Material::builder().color(Color::CYAN).reflection(0.1).build();
     let alice_blue_material = Material::builder().color(Color::ALICE_BLUE).build();
     let lavender_material = Material::builder().color(Color::LAVENDER).build();
-    let misty_rose_material = Material::builder().color(Color::MISTY_ROSE).build();
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let stripes = Stripes::new(&stripes_affine, Color::WHITE, Color::LIGHT_GRAY);

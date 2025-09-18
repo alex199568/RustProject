@@ -473,10 +473,9 @@ pub struct Triangle {
     p1: Vec3A,
     p2: Vec3A,
     p3: Vec3A,
-    n: Vec3A,
     e1: Vec3A,
     e2: Vec3A,
-    n1: Option<Vec3A>,
+    n1: Vec3A,
     n2: Option<Vec3A>,
     n3: Option<Vec3A>,
     uv1: Option<Vec2>,
@@ -494,8 +493,26 @@ impl Triangle {
             common: ShapeCommon::new(&Affine3A::IDENTITY),
             material: material,
             p1: p1, p2: p2, p3: p3,
-            e1: e1, e2: e2, n: n,
-            n1: None, n2: None, n3: None,
+            e1: e1, e2: e2,
+            n1: n, n2: None, n3: None,
+            uv1: None, uv2: None, uv3: None
+        }
+    }
+
+    pub fn normals(
+        material: Material,
+        p1: Vec3A, p2: Vec3A, p3: Vec3A,
+        n1: Option<Vec3A>, n2: Option<Vec3A>, n3: Option<Vec3A>
+    ) -> Self {
+        let e1 = p2 - p1;
+        let e2 = p3 - p1;
+        let n = n1.unwrap_or(e2.cross(e1));
+        Self {
+            common: ShapeCommon::new(&Affine3A::IDENTITY),
+            material: material,
+            p1: p1, p2: p2, p3: p3,
+            e1: e1, e2: e2,
+            n1: n, n2: n2, n3: n3,
             uv1: None, uv2: None, uv3: None
         }
     }
@@ -519,7 +536,19 @@ impl LocalShape for Triangle {
     }
 
     fn local_normal(&self, point: Vec3A) -> Vec3A {
-        self.n
+        if self.n2.is_some() {
+            let n1 = self.n1;
+            let n2 = self.n2.unwrap();
+            let n3 = self.n3.unwrap();
+
+            // todo: get proper uv
+            let u = 0.3f32;
+            let v = 0.4f32;
+
+            n2 * u + n3 * v + n1 * (1.0 - u - v)
+        } else {
+            self.n1
+        }
     }
 }
 
