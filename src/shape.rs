@@ -599,7 +599,7 @@ impl Shape {
             Shape::Cube(c) => c.common.intersect(c, ray, buffer),
             Shape::Cylinder(c) => c.common.intersect(c, ray, buffer),
             Shape::Cone(c) => c.common.intersect(c, ray, buffer),
-            Shape::Triangle(t) => t.common.intersect(t, ray, buffer),
+            Shape::Triangle(t) => t.local_intersect(ray, buffer),
             Shape::Group(g) => g.common.intersect(g, ray, buffer)
         }
     }
