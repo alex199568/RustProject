@@ -27,15 +27,29 @@ use crate::light::Light;
 use crate::camera::Camera;
 use crate::scene::Scene;
 
+fn to_material(obj_mat: &tobj::Material) -> Material {
+    Material::builder()
+        .color(Color::option(obj_mat.diffuse))
+        .diffuse(Color::option(obj_mat.diffuse).r)
+        .ambient(Color::option(obj_mat.ambient).r)
+        .shininess(obj_mat.shininess.unwrap_or(0.0))
+        .refraction(obj_mat.optical_density.unwrap_or(1.0))
+        .transparency(1.0 - obj_mat.dissolve.unwrap_or(1.0))
+        .specular(Color::option(obj_mat.specular).r)
+        .build()
+}
+
 fn load_obj(tr: &Affine3A) -> Shape {
     let (models, materials) = 
         tobj::load_obj(
-            "assets/models/monkey/monkey.obj", 
+            "assets/models/monkey/smooth_monkey.obj", 
             &tobj::LoadOptions{
                 triangulate: true,
                 ..Default::default()
             })
         .expect("Failed to load obj");
+
+    let mats = materials.expect("Failed to load materials");
 
     let mut tris: Vec<Shape> = Vec::new();
 
@@ -52,11 +66,11 @@ fn load_obj(tr: &Affine3A) -> Shape {
         let has_uv    = uv.len()  == 2 * num_verts;
 
         // // Pick material (or a default)
-        // let material = model
-        //     .material_id
-        //     .and_then(|i| materials.get(i))
-        //     .map(|m| to_material(m))
-        //     .unwrap_or_else(Material::default);
+        let material = mesh
+            .material_id
+            .and_then(|i| mats.get(i))
+            .map(|m| to_material(m))
+            .unwrap_or_else(|| Material::builder().build());
 
         for tri in idx.chunks(3) {
             let i0 = tri[0] as usize;
@@ -86,10 +100,20 @@ fn load_obj(tr: &Affine3A) -> Shape {
             //     )
             // } else { (None, None, None) };
 
-            let misty_rose_material = Material::builder().color(Color::MISTY_ROSE).build();
+            let tr_mat = 
+                Material::builder()
+                    .color(material.color)
+                    .ambient(material.ambient)
+                    .diffuse(material.diffuse)
+                    .specular(material.specular)
+                    .shininess(material.shininess)
+                    .reflection(material.reflection)
+                    .transparency(material.transparency)
+                    .refraction(material.refraction)
+                    .build();
 
             let tri = Triangle::normals(
-                misty_rose_material,
+                tr_mat,
                 p0, p1, p2,
                 n1, n2, n3
             );
@@ -175,7 +199,7 @@ fn main() {
 
     let monkey_affine = 
         Affine3A::from_translation(glam::vec3(0.0, 1.0, 0.0)) *
-        Affine3A::from_rotation_y(130.0f32.to_radians());
+        Affine3A::from_rotation_y(20.0f32.to_radians());
     let monkey = load_obj(&monkey_affine);
     
     let shapes = vec![ 

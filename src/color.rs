@@ -18,6 +18,13 @@ pub struct Color {
 
 impl Color {
 
+    pub fn option(o: Option<[f32; 3]>) -> Self {
+        match o {
+            Some(items) => Self {r: items[0], g: items[1], b: items[2]},
+            None => Self::BLACK
+        }
+    }
+
     const fn hex(value: i32) -> Self {
         let r = ((value >> 16) & 0xFF) as f32 / 255.0;
         let g = ((value >> 8) & 0xFF) as f32 / 255.0;

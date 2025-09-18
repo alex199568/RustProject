@@ -667,23 +667,6 @@ impl Group {
     }
 }
 
-/*
-    public override void Divide(int threshold)
-    {
-        if (_children.Count < threshold) { foreach (var s in _children) s.Divide(threshold); return; }
-
-        var (left, right, stay) = Classify();
-        if (left.Count == 0 || right.Count == 0) { foreach (var s in _children) s.Divide(threshold); return; }
-
-        _children.Clear();
-        _children.AddRange(stay);
-        MakeSubGroup(left);
-        MakeSubGroup(right);
-
-        foreach (var s in _children) s.Divide(threshold);
-    }
-*/
-
 impl LocalShape for Group {
 
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
@@ -806,16 +789,6 @@ impl Shape {
             Shape::Triangle(_) => 1,
             Shape::Group(g) => g.children.iter().map(|c| c.max_intersections()).sum()
         }
-    }
-
-    pub fn check_id(&self, id: usize) -> bool {
-        if self.common().id == id {
-            return true;
-        }
-        if let Shape::Group(g) = self {
-            return g.children.iter().any(|c| c.check_id(id));
-        }
-        return false;
     }
 
     pub fn parent_id(&self) -> Option<usize> {
