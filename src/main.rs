@@ -18,7 +18,7 @@ use glam::Vec3;
 
 use crate::color::Color;
 use crate::img::AccImg;
-use crate::shape::{Shape, Sphere, Plane, Cube, Cylinder, Cone, Group};
+use crate::shape::{Shape, Sphere, Plane, Cube, Cylinder, Cone, Triangle, Group};
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
 use crate::pattern::{Stripes, Gradient, Rings, Checkers};
@@ -33,6 +33,7 @@ fn main() {
     let cyan_material = Material::builder().color(Color::CYAN).reflection(0.1).build();
     let alice_blue_material = Material::builder().color(Color::ALICE_BLUE).build();
     let lavender_material = Material::builder().color(Color::LAVENDER).build();
+    let misty_rose_material = Material::builder().color(Color::MISTY_ROSE).build();
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let stripes = Stripes::new(&stripes_affine, Color::WHITE, Color::LIGHT_GRAY);
@@ -101,10 +102,18 @@ fn main() {
     shapes_group.add(cube.into());
     shapes_group.add(cylinder.into());
     shapes_group.add(cone.into());
+
+    let triangle = Triangle::new(
+        misty_rose_material,
+        glam::vec3a(-1.0, 0.0, -2.0),
+        glam::vec3a(1.0, 0.0, -2.0),
+        glam::vec3a(0.0, 1.0, -2.0)
+    );
     
     let shapes = vec![ 
         shapes_group.into(),
-        room_group.into()
+        room_group.into(),
+        triangle.into()
     ];
 
     let l1_position = glam::vec3a(-10.0, 10.0, -10.0);
@@ -165,7 +174,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/groups.png";
+    let filepath = "renders/triangle.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

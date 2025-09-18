@@ -50,6 +50,7 @@ impl Color {
 
     pub const ALICE_BLUE: Color = Color::hex(0xF0F8FF);
     pub const LAVENDER: Color = Color::hex(0xe6e6fa);
+    pub const MISTY_ROSE: Color = Color::hex(0xffe4e1);
 }
 
 impl Display for Color {

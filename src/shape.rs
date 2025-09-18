@@ -6,6 +6,7 @@ use crate::scene::Scene;
 use glam::Affine3A;
 use glam::Mat3A;
 use glam::Vec3A;
+use glam::Vec2;
 
 use std::convert::From;
 
@@ -466,6 +467,62 @@ impl LocalShape for Cone {
     }
 }
 
+pub struct Triangle {
+    common: ShapeCommon,
+    material: Material,
+    p1: Vec3A,
+    p2: Vec3A,
+    p3: Vec3A,
+    n: Vec3A,
+    e1: Vec3A,
+    e2: Vec3A,
+    n1: Option<Vec3A>,
+    n2: Option<Vec3A>,
+    n3: Option<Vec3A>,
+    uv1: Option<Vec2>,
+    uv2: Option<Vec2>,
+    uv3: Option<Vec2>
+}
+
+impl Triangle {
+
+    pub fn new(material: Material, p1: Vec3A, p2: Vec3A, p3: Vec3A) -> Self {
+        let e1 = p2 - p1;
+        let e2 = p3 - p1;
+        let n = e2.cross(e1);
+        Self {
+            common: ShapeCommon::new(&Affine3A::IDENTITY),
+            material: material,
+            p1: p1, p2: p2, p3: p3,
+            e1: e1, e2: e2, n: n,
+            n1: None, n2: None, n3: None,
+            uv1: None, uv2: None, uv3: None
+        }
+    }
+}
+
+impl LocalShape for Triangle {
+
+    fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
+        let dir_cross_e2 = ray.direction.cross(self.e2);
+        let det = self.e1.dot(dir_cross_e2);
+        if det.abs() < 1e-6 { return; }
+        let f = 1.0 / det;
+        let p1_to_origin = ray.origin - self.p1;
+        let u = f * p1_to_origin.dot(dir_cross_e2);
+        if u < 0.0 || u > 1.0 { return; }
+        let origin_cross_e1 = p1_to_origin.cross(self.e1);
+        let v = f * ray.direction.dot(origin_cross_e1);
+        if v < 0.0 || (u + v) > 1.0 { return; }
+        let t = f * self.e2.dot(origin_cross_e1);
+        buffer.add(Intersection{shape_id: self.common.id, t: t});
+    }
+
+    fn local_normal(&self, point: Vec3A) -> Vec3A {
+        self.n
+    }
+}
+
 pub struct Group {
     common: ShapeCommon,
     children: Vec<Shape>
@@ -505,6 +562,7 @@ pub enum Shape {
     Cube(Cube),
     Cylinder(Cylinder),
     Cone(Cone),
+    Triangle(Triangle),
     Group(Group)
 }
 
@@ -517,6 +575,7 @@ impl Shape {
             Shape::Cube(c) => &c.common,
             Shape::Cylinder(c) => &c.common,
             Shape::Cone(c) => &c.common,
+            Shape::Triangle(t) => &t.common,
             Shape::Group(g) => &g.common
         }
     }
@@ -528,6 +587,7 @@ impl Shape {
             Shape::Cube(c) => &mut c.common,
             Shape::Cylinder(c) => &mut c.common,
             Shape::Cone(c) => &mut c.common,
+            Shape::Triangle(t) => &mut t.common,
             Shape::Group(g) => &mut g.common
         }
     }
@@ -539,6 +599,7 @@ impl Shape {
             Shape::Cube(c) => c.common.intersect(c, ray, buffer),
             Shape::Cylinder(c) => c.common.intersect(c, ray, buffer),
             Shape::Cone(c) => c.common.intersect(c, ray, buffer),
+            Shape::Triangle(t) => t.common.intersect(t, ray, buffer),
             Shape::Group(g) => g.common.intersect(g, ray, buffer)
         }
     }
@@ -558,6 +619,7 @@ impl Shape {
             Shape::Cube(c) => c.common.normal(c, p),
             Shape::Cylinder(c) => c.common.normal(c, p),
             Shape::Cone(c) => c.common.normal(c, p),
+            Shape::Triangle(t) => t.common.normal(t, p),
             Shape::Group(g) => g.common.normal(g, p)
         };
 
@@ -579,6 +641,7 @@ impl Shape {
             Shape::Cube(c) => &c.material,
             Shape::Cylinder(c) => &c.material,
             Shape::Cone(c) => &c.material,
+            Shape::Triangle(t) => &t.material,
             Shape::Group(g) => g.children[0].material()
         }
     }
@@ -598,6 +661,7 @@ impl Shape {
             Shape::Cube(_) => 2,
             Shape::Cylinder(_) => 2,
             Shape::Cone(_) => 4,
+            Shape::Triangle(_) => 1,
             Shape::Group(g) => g.children.iter().map(|c| c.max_intersections()).sum()
         }
     }
@@ -655,6 +719,13 @@ impl From<Cylinder> for Shape {
 impl From<Cone> for Shape {
     fn from(c: Cone) -> Self {
         Shape::Cone(c)
+    }
+}
+
+impl From<Triangle> for Shape {
+
+    fn from(t: Triangle) -> Self {
+        Shape::Triangle(t)
     }
 }
 
