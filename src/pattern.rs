@@ -18,9 +18,8 @@ impl PatternCommon {
         }
     }
 
-    fn at(&self, local: &dyn LocalPattern, shape_inv: &Affine3A, point: Vec3A) -> Color {
-        let shape_point = shape_inv.transform_point3a(point);
-        let pattern_point = &self.inv.transform_point3a(shape_point);
+    fn at(&self, local: &dyn LocalPattern, point: Vec3A) -> Color {
+        let pattern_point = &self.inv.transform_point3a(point);
         local.local_at(*pattern_point)
     }
 }
@@ -147,12 +146,12 @@ pub enum Pattern {
 
 impl Pattern {
 
-    pub fn at(&self, shape_inv: &Affine3A, point: Vec3A) -> Color {
+    pub fn at(&self, point: Vec3A) -> Color {
         match self {
-            Pattern::Stripes(s) => s.common.at(s, shape_inv, point),
-            Pattern::Gradient(g) => g.common.at(g, shape_inv, point),
-            Pattern::Rings(r) => r.common.at(r, shape_inv, point),
-            Pattern::Checkers(c) => c.common.at(c, shape_inv, point)
+            Pattern::Stripes(s) => s.common.at(s, point),
+            Pattern::Gradient(g) => g.common.at(g, point),
+            Pattern::Rings(r) => r.common.at(r, point),
+            Pattern::Checkers(c) => c.common.at(c, point)
         }
     }
 }

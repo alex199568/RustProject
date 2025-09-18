@@ -1,6 +1,7 @@
 
 use crate::color::Color;
 use crate::shape::Shape;
+use crate::scene::Scene;
 use crate::intersection::Hit;
 
 use glam::Vec3A;
@@ -12,10 +13,20 @@ pub struct Light {
 
 impl Light {
 
-    pub fn shade(&self, shape: &Shape, hit: &Hit, shadow: f32) -> Color {
+    pub fn shade(&self, shape: &Shape, hit: &Hit, shadow: f32, scene: &Scene) -> Color {
         let material = shape.material();
         let material_color = match &material.pattern {
-            Some(p) => p.at(shape.inv(), hit.point),
+            Some(p) => {
+                let mut parent_id = shape.parent_id();
+                let mut point = shape.inv().transform_point3a(hit.point);
+                while parent_id.is_some() {
+                    let parent_shape = scene.find_shape_by_id(parent_id.unwrap());
+                    point = parent_shape.inv().transform_point3a(point);
+                    parent_id = parent_shape.parent_id();
+                }
+
+                p.at(point)
+            },
             None => material.color
         };
 

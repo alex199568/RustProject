@@ -53,7 +53,7 @@ impl Scene {
 
         for light in &self.lights {
             let s = self.shadow(light, hit.shape_id, hit.point, buffer);
-            let c = light.shade(shape, hit, s);
+            let c = light.shade(shape, hit, s, self);
             surface += c;
         }
 
@@ -112,7 +112,7 @@ impl Scene {
         f0 + (1.0 - f0) * (1.0 - cos_i).powi(5)
     }
 
-    fn find_shape_by_id(&self, id: usize) -> &Shape {
+    pub fn find_shape_by_id(&self, id: usize) -> &Shape {
         self.shapes.iter().find_map(|s| s.find_by_id(id)).unwrap()
     }
     
@@ -133,7 +133,7 @@ impl Scene {
             };
 
             let shape = self.find_shape_by_id(hit.shape_id);
-            let h = Hit::new(shape, hit, &ray);
+            let h = Hit::new(shape, hit, &ray, self);
 
             // --- local lighting (non-transmitted part) ---
             let local = self.shade(&h, shape, buf);

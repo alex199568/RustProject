@@ -86,7 +86,14 @@ fn main() {
         Affine3A::from_rotation_x(std::f32::consts::FRAC_PI_2);
     let wall3 = Plane::new(&wall3_tr, rings_material);
 
-    let shapes_affine = Affine3A::IDENTITY;
+    let room_affine = Affine3A::from_translation(glam::vec3(0.0, 0.0, 2.0));
+    let mut room_group = Group::new(&room_affine);
+    room_group.add(wall1.into());
+    room_group.add(wall2.into());
+    room_group.add(wall3.into());
+    room_group.add(floor.into());
+
+    let shapes_affine = Affine3A::from_scale(glam::vec3(0.7, 0.7, 0.7));
     let mut shapes_group = Group::new(&shapes_affine);
     shapes_group.add(s1.into());
     shapes_group.add(s2.into());
@@ -97,8 +104,7 @@ fn main() {
     
     let shapes = vec![ 
         shapes_group.into(),
-        floor.into(),
-        wall1.into(), wall2.into(), wall3.into()
+        room_group.into()
     ];
 
     let l1_position = glam::vec3a(-10.0, 10.0, -10.0);
@@ -159,7 +165,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/group.png";
+    let filepath = "renders/groups.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e)

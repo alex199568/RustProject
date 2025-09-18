@@ -1,6 +1,7 @@
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::scene::Scene;
 
 use glam::Affine3A;
 use glam::Mat3A;
@@ -15,7 +16,8 @@ static NEXT_SHAPE_ID: AtomicUsize = AtomicUsize::new(1);
 struct ShapeCommon {
     inv: Affine3A,
     inv_tr: Mat3A,
-    id: usize
+    id: usize,
+    parent_id: Option<usize>
 }
 
 trait LocalShape {
@@ -32,7 +34,8 @@ impl ShapeCommon {
         Self {
             inv: inv,
             inv_tr: inv_tr,
-            id: id
+            id: id,
+            parent_id: None
         }
     }
 
@@ -47,9 +50,9 @@ impl ShapeCommon {
     }
 
     fn normal(&self, local: &dyn LocalShape, point: Vec3A) -> Vec3A {
-        let shape_point = &self.inv.transform_point3a(point);
-        let shape_normal = local.local_normal(*shape_point);
-        let world_normal = &self.inv_tr * shape_normal;
+        let shape_point = self.inv.transform_point3a(point);
+        let shape_normal = local.local_normal(shape_point);
+        let world_normal = self.inv_tr * shape_normal;
         world_normal.normalize()
     }
 }
@@ -477,7 +480,8 @@ impl Group {
         }
     }
 
-    pub fn add(&mut self, shape: Shape) {
+    pub fn add(&mut self, mut shape: Shape) {
+        shape.common_mut().parent_id = Some(self.common.id);
         self.children.push(shape);
     }
 }
@@ -517,6 +521,17 @@ impl Shape {
         }
     }
 
+    fn common_mut(&mut self) -> &mut ShapeCommon {
+        match self {
+            Shape::Sphere(s) => &mut s.common,
+            Shape::Plane(p) => &mut p.common,
+            Shape::Cube(c) => &mut c.common,
+            Shape::Cylinder(c) => &mut c.common,
+            Shape::Cone(c) => &mut c.common,
+            Shape::Group(g) => &mut g.common
+        }
+    }
+
     pub fn intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer) {
         match self {
             Shape::Sphere(s) => s.common.intersect(s, ray, buffer),
@@ -528,15 +543,33 @@ impl Shape {
         }
     }
 
-    pub fn normal(&self, point: Vec3A) -> Vec3A {
-        match self {
-            Shape::Sphere(s) => s.common.normal(s, point),
-            Shape::Plane(p) => p.common.normal(p, point),
-            Shape::Cube(c) => c.common.normal(c, point),
-            Shape::Cylinder(c) => c.common.normal(c, point),
-            Shape::Cone(c) => c.common.normal(c, point),
-            Shape::Group(g) => g.common.normal(g, point)
+    pub fn normal(&self, point: Vec3A, scene: &Scene) -> Vec3A {
+        let mut p = point;
+        let mut parent_id: Option<usize> = self.common().parent_id;
+        while parent_id.is_some() {
+            let parent_shape = scene.find_shape_by_id(parent_id.unwrap());
+            p = parent_shape.inv().transform_point3a(p);
+            parent_id = parent_shape.common().parent_id;
         }
+
+        let mut shape_normal = match self {
+            Shape::Sphere(s) => s.common.normal(s, p),
+            Shape::Plane(pl) => pl.common.normal(pl, p),
+            Shape::Cube(c) => c.common.normal(c, p),
+            Shape::Cylinder(c) => c.common.normal(c, p),
+            Shape::Cone(c) => c.common.normal(c, p),
+            Shape::Group(g) => g.common.normal(g, p)
+        };
+
+        parent_id = self.common().parent_id;
+        while parent_id.is_some() {
+            let parent_shape = scene.find_shape_by_id(parent_id.unwrap());
+            shape_normal = parent_shape.inv_tr() * shape_normal;
+            shape_normal = shape_normal.normalize();
+            parent_id = parent_shape.common().parent_id;
+        }
+
+        shape_normal
     }
 
     pub fn material(&self) -> &Material {
@@ -552,6 +585,10 @@ impl Shape {
 
     pub fn inv(&self) -> &Affine3A {
         &self.common().inv
+    }
+
+    pub fn inv_tr(&self) -> &Mat3A {
+        &self.common().inv_tr
     }
 
     pub fn max_intersections(&self) -> usize {
@@ -573,6 +610,10 @@ impl Shape {
             return g.children.iter().any(|c| c.check_id(id));
         }
         return false;
+    }
+
+    pub fn parent_id(&self) -> Option<usize> {
+        self.common().parent_id
     }
 
     pub fn find_by_id(&self, id: usize) -> Option<&Shape> {

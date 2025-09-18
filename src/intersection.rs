@@ -2,6 +2,7 @@
 
 use crate::ray::Ray;
 use crate::shape::Shape;
+use crate::scene::Scene;
 
 use glam::Vec3A;
 
@@ -60,10 +61,11 @@ pub struct Hit {
 
 impl Hit {
 
-    pub fn new(shape: &Shape, intersection: Intersection, ray: &Ray) -> Self {
+    pub fn new(shape: &Shape, intersection: Intersection, ray: &Ray, scene: &Scene) -> Self {
         let point = ray.at(intersection.t);
         let eye = -ray.direction;
-        let mut normal = shape.normal(point);
+
+        let mut normal = shape.normal(point, scene);
         if normal.dot(eye) < 0.0 {
             normal = -normal;
         }
