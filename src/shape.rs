@@ -566,14 +566,13 @@ impl Shape {
     }
 
     pub fn check_id(&self, id: usize) -> bool {
-        match self {
-            Shape::Sphere(s) => s.common.id == id,
-            Shape::Plane(p) => p.common.id == id,
-            Shape::Cube(c) => c.common.id == id,
-            Shape::Cylinder(c) => c.common.id == id,
-            Shape::Cone(c) => c.common.id == id,
-            Shape::Group(g) => g.common.id == id || g.children.iter().any(|c| c.check_id(id))
+        if self.common().id == id {
+            return true;
         }
+        if let Shape::Group(g) = self {
+            return g.children.iter().any(|c| c.check_id(id));
+        }
+        return false;
     }
 
     pub fn find_by_id(&self, id: usize) -> Option<&Shape> {

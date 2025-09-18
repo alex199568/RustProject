@@ -35,6 +35,14 @@ impl IntersectionBuffer {
             .min_by(|a, b| a.t.total_cmp(&b.t))
     }
 
+    pub fn hit_ignoring(&self, ignore_id: usize) -> Option<Intersection> {
+        self.intersections
+            .iter()
+            .copied()
+            .filter(|i| i.t > 1e-5 && i.shape_id != ignore_id)
+            .min_by(|a, b| a.t.total_cmp(&b.t))
+    }
+
     pub fn clear(&mut self) {
         self.intersections.clear();
     }

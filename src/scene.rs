@@ -25,17 +25,8 @@ impl Scene {
 
     fn intersect(&self, ray: &Ray, intersections: &mut IntersectionBuffer) {
         intersections.clear();
-        for (i, shape) in self.shapes.iter().enumerate() {
-            shape.intersect(ray, intersections);
-        }
-    }
-
-    fn shadow_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer, ignore: usize) {
-        buffer.clear();
         for shape in self.shapes.iter() {
-            if !shape.check_id(ignore) {
-                shape.intersect(ray, buffer)
-            }
+            shape.intersect(ray, intersections);
         }
     }
 
@@ -44,10 +35,10 @@ impl Scene {
         let distance = v.length();
         let direction = v / distance;
         let r = Ray { origin: point, direction: direction };
-        self.shadow_intersect(&r, buffer, shape_id);
-        if let Some(hit) = buffer.hit() {
+        self.intersect(&r, buffer);
+        if let Some(hit) = buffer.hit_ignoring(shape_id) {
             return if hit.t < distance {
-                let s = self.find_shape_by_id(shape_id);
+                let s = self.find_shape_by_id(hit.shape_id);
                 let transparency = s.material().transparency;
                 1.0 - transparency
             } else {
