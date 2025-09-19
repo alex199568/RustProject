@@ -12,16 +12,14 @@ pub struct Triangle {
     pub common: ShapeCommon,
     pub material_id: usize,
     p1: Vec3A,
-    _p2: Vec3A,
-    _p3: Vec3A,
     e1: Vec3A,
     e2: Vec3A,
     n1: Vec3A,
-    n2: Option<Vec3A>,
-    n3: Option<Vec3A>,
-    _uv1: Option<Vec2>,
-    _uv2: Option<Vec2>,
-    _uv3: Option<Vec2>,
+    n2: Vec3A,
+    n3: Vec3A,
+    _uv1: Vec2,
+    _uv2: Vec2,
+    _uv3: Vec2,
 }
 
 impl Triangle {
@@ -49,16 +47,14 @@ impl Triangle {
             common: ShapeCommon::new(&Affine3A::IDENTITY, bounds),
             material_id: material,
             p1: p1,
-            _p2: p2,
-            _p3: p3,
             e1: e1,
             e2: e2,
             n1: n,
-            n2: n2,
-            n3: n3,
-            _uv1: uv1,
-            _uv2: uv2,
-            _uv3: uv3,
+            n2: n2.unwrap_or(n),
+            n3: n3.unwrap_or(n),
+            _uv1: uv1.unwrap_or(Vec2::ZERO),
+            _uv2: uv2.unwrap_or(Vec2::ZERO),
+            _uv3: uv3.unwrap_or(Vec2::ZERO),
         }
     }
 }
@@ -90,20 +86,12 @@ impl LocalShape for Triangle {
     }
 
     fn local_normal(&self, _point: Vec3A, intersection: Intersection) -> Vec3A {
-        if self.n2.is_some() {
-            let n1 = self.n1;
-            let n2 = self.n2.unwrap();
-            let n3 = self.n3.unwrap();
+        let hit_uv = intersection.uv.unwrap_or(Vec2::ZERO);
 
-            let hit_uv = intersection.uv.unwrap_or(Vec2::ZERO);
+        let u = hit_uv.x;
+        let v = hit_uv.y;
 
-            let u = hit_uv.x;
-            let v = hit_uv.y;
-
-            n2 * u + n3 * v + n1 * (1.0 - u - v)
-        } else {
-            self.n1
-        }
+        self.n2 * u + self.n3 * v + self.n1 * (1.0 - u - v)
     }
 }
 
