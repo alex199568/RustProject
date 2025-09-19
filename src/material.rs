@@ -1,11 +1,20 @@
-
 use crate::color::Color;
 use crate::pattern::Pattern;
 
 use typed_builder::TypedBuilder;
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static NEXT_MATERIAL_ID: AtomicUsize = AtomicUsize::new(1);
+
+fn next_material_id() -> usize {
+    NEXT_MATERIAL_ID.fetch_add(1, Ordering::Relaxed)
+}
+
 #[derive(TypedBuilder)]
 pub struct Material {
+    #[builder(default = next_material_id(), setter(skip))]
+    pub id: usize,
     #[builder(default = Color::BLACK)]
     pub color: Color,
     #[builder(default = 0.01)]
@@ -23,11 +32,10 @@ pub struct Material {
     #[builder(default = 0.0)]
     pub transparency: f32,
     #[builder(default = 1.0)]
-    pub refraction: f32
+    pub refraction: f32,
 }
 
 impl Material {
-
     pub const IOR_VACUUM: f32 = 1.0;
     pub const IOR_AIR: f32 = 1.00029;
     pub const IOR_WATER: f32 = 1.333;

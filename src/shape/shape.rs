@@ -2,7 +2,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
-use crate::material::Material;
 use crate::ray::Ray;
 use crate::scene::Scene;
 
@@ -139,15 +138,15 @@ impl Shape {
         shape_normal
     }
 
-    pub fn material(&self) -> &Material {
+    pub fn material_id(&self) -> usize {
         match self {
-            Shape::Sphere(s) => &s.material,
-            Shape::Plane(p) => &p.material,
-            Shape::Cube(c) => &c.material,
-            Shape::Cylinder(c) => &c.material,
-            Shape::Cone(c) => &c.material,
-            Shape::Triangle(t) => &t.material,
-            Shape::Group(g) => g.children[0].material(),
+            Shape::Sphere(s) => s.material_id,
+            Shape::Plane(p) => p.material_id,
+            Shape::Cube(c) => c.material_id,
+            Shape::Cylinder(c) => c.material_id,
+            Shape::Cone(c) => c.material_id,
+            Shape::Triangle(t) => t.material_id,
+            Shape::Group(g) => g.children[0].material_id(),
         }
     }
 

@@ -3,19 +3,22 @@ use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::Shape;
 
 use glam::Vec3A;
 
 pub struct Scene {
+    materials: Vec<Material>,
     shapes: Vec<Shape>,
     lights: Vec<Light>,
 }
 
 impl Scene {
-    pub fn new(shapes: Vec<Shape>, lights: Vec<Light>) -> Self {
+    pub fn new(materials: Vec<Material>, shapes: Vec<Shape>, lights: Vec<Light>) -> Self {
         Self {
+            materials: materials,
             shapes: shapes,
             lights: lights,
         }
@@ -51,7 +54,8 @@ impl Scene {
             .filter(|i| i.t > 1e-4 && i.t < distance && i.shape_id != shape_id)
         {
             let s = self.find_shape_by_id(i.shape_id);
-            let tau = s.material().transparency.clamp(0.0, 1.0); // per-surface transmittance
+            let m = self.find_material_by_id(s.material_id());
+            let tau = m.transparency.clamp(0.0, 1.0); // per-surface transmittance
             transittance *= tau; // multiply through each layer
             // might break early if transittance is nearly 0, this way intersections need to be sorted by t
         }
@@ -59,7 +63,13 @@ impl Scene {
         transittance
     }
 
-    fn shade(&self, hit: &Hit, shape: &Shape, buffer: &mut IntersectionBuffer) -> Color {
+    fn shade(
+        &self,
+        hit: &Hit,
+        shape: &Shape,
+        material: &Material,
+        buffer: &mut IntersectionBuffer,
+    ) -> Color {
         let mut surface = Color {
             r: 0.0,
             g: 0.0,
@@ -68,7 +78,7 @@ impl Scene {
 
         for light in &self.lights {
             let s = self.shadow(light, hit.shape_id, hit.over_point, buffer);
-            let c = light.shade(shape, hit, self) * s;
+            let c = light.shade(shape, material, hit, self) * s;
             surface += c;
         }
 
@@ -90,7 +100,9 @@ impl Scene {
                     1.0
                 } else {
                     let s = containers.last().unwrap();
-                    self.find_shape_by_id(*s).material().refraction // or .refractive_index / ior
+                    let shape = self.find_shape_by_id(*s);
+                    let material = self.find_material_by_id(shape.material_id());
+                    material.refraction
                 };
             }
 
@@ -108,7 +120,9 @@ impl Scene {
                     1.0
                 } else {
                     let s = containers.last().unwrap();
-                    self.find_shape_by_id(*s).material().refraction
+                    let shape = self.find_shape_by_id(*s);
+                    let material = self.find_material_by_id(shape.material_id());
+                    material.refraction
                 };
                 break;
             }
@@ -124,6 +138,10 @@ impl Scene {
 
     pub fn find_shape_by_id(&self, id: usize) -> &Shape {
         self.shapes.iter().find_map(|s| s.find_by_id(id)).unwrap()
+    }
+
+    pub fn find_material_by_id(&self, id: usize) -> &Material {
+        self.materials.iter().find(|m| m.id == id).unwrap()
     }
 
     pub fn color(&self, ray0: &Ray, buf: &mut IntersectionBuffer, max_depth: usize) -> Color {
@@ -145,12 +163,13 @@ impl Scene {
             };
 
             let shape = self.find_shape_by_id(hit.shape_id);
+            let m = self.find_material_by_id(shape.material_id());
+
             let h = Hit::new(shape, hit, &ray, self);
 
             // --- local lighting (non-transmitted part) ---
-            let local = self.shade(&h, shape, buf);
+            let local = self.shade(&h, shape, m, buf);
 
-            let m = shape.material();
             let refl = m.reflection.clamp(0.0, 1.0); // scalar 0..1
             let transp = m.transparency.clamp(0.0, 1.0); // scalar 0..1
 

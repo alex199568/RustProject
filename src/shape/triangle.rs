@@ -1,6 +1,5 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
-use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
 use std::convert::From;
@@ -11,7 +10,7 @@ use glam::Vec3A;
 
 pub struct Triangle {
     pub common: ShapeCommon,
-    pub material: Material,
+    pub material_id: usize,
     p1: Vec3A,
     _p2: Vec3A,
     _p3: Vec3A,
@@ -27,7 +26,7 @@ pub struct Triangle {
 
 impl Triangle {
     pub fn new(
-        material: Material,
+        material: usize,
         p1: Vec3A,
         p2: Vec3A,
         p3: Vec3A,
@@ -48,7 +47,7 @@ impl Triangle {
         let n = n1.unwrap_or(e2.cross(e1));
         Self {
             common: ShapeCommon::new(&Affine3A::IDENTITY, bounds),
-            material: material,
+            material_id: material,
             p1: p1,
             _p2: p2,
             _p3: p3,

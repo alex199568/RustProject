@@ -1,6 +1,5 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
-use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::caps::Caps;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
@@ -11,13 +10,13 @@ use glam::Vec3A;
 
 pub struct Cone {
     pub common: ShapeCommon,
-    pub material: Material,
+    pub material_id: usize,
     range: (f32, f32),
     caps: bool,
 }
 
 impl Cone {
-    pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
+    pub fn new(tr: &Affine3A, material: usize, range: (f32, f32), caps: bool) -> Self {
         let a = range.0.abs();
         let b = range.1.abs();
         let limit = a.max(b);
@@ -27,7 +26,7 @@ impl Cone {
         );
         Self {
             common: ShapeCommon::new(tr, bounds),
-            material: material,
+            material_id: material,
             range: range,
             caps: caps,
         }

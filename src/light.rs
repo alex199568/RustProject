@@ -1,5 +1,6 @@
 use crate::color::Color;
 use crate::intersection::Hit;
+use crate::material::Material;
 use crate::scene::Scene;
 use crate::shape::Shape;
 
@@ -11,8 +12,7 @@ pub struct Light {
 }
 
 impl Light {
-    pub fn shade(&self, shape: &Shape, hit: &Hit, scene: &Scene) -> Color {
-        let material = shape.material();
+    pub fn shade(&self, shape: &Shape, material: &Material, hit: &Hit, scene: &Scene) -> Color {
         let material_color = match &material.pattern {
             Some(p) => {
                 let mut parent_id = shape.parent_id();

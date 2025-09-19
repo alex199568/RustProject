@@ -1,6 +1,5 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
-use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::caps::Caps;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
@@ -11,20 +10,20 @@ use glam::Vec3A;
 
 pub struct Cylinder {
     pub common: ShapeCommon,
-    pub material: Material,
+    pub material_id: usize,
     range: (f32, f32),
     caps: bool,
 }
 
 impl Cylinder {
-    pub fn new(tr: &Affine3A, material: Material, range: (f32, f32), caps: bool) -> Self {
+    pub fn new(tr: &Affine3A, material: usize, range: (f32, f32), caps: bool) -> Self {
         let bounds = Aabb::new(
             glam::vec3a(-1.0, range.0, -1.0),
             glam::vec3a(1.0, range.1, 1.0),
         );
         Self {
             common: ShapeCommon::new(tr, bounds),
-            material: material,
+            material_id: material,
             range: range,
             caps: caps,
         }

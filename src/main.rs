@@ -41,7 +41,7 @@ fn to_material(obj_mat: &tobj::Material) -> Material {
         .build()
 }
 
-fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
+fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> (Vec<Material>, Shape) {
     let path_ref: &Path = file_path.as_ref();
     let (models, materials) = tobj::load_obj(
         path_ref,
@@ -55,6 +55,7 @@ fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
     let mats = materials.expect("Failed to load materials");
 
     let mut tris: Vec<Shape> = Vec::new();
+    let mut materials: Vec<Material> = Vec::new();
 
     for model in models.iter() {
         let mesh = &model.mesh;
@@ -74,6 +75,8 @@ fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
             .and_then(|i| mats.get(i))
             .map(|m| to_material(m))
             .unwrap_or_else(|| Material::builder().build());
+        let material_id = material.id;
+        materials.push(material);
 
         for tri in idx.chunks(3) {
             let i0 = tri[0] as usize;
@@ -107,18 +110,7 @@ fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
                 (None, None, None)
             };
 
-            let tr_mat = Material::builder()
-                .color(material.color)
-                .ambient(material.ambient)
-                .diffuse(material.diffuse)
-                .specular(material.specular)
-                .shininess(material.shininess)
-                .reflection(material.reflection)
-                .transparency(material.transparency)
-                .refraction(material.refraction)
-                .build();
-
-            let tri = Triangle::new(tr_mat, p0, p1, p2, n1, n2, n3, uv1, uv2, uv3);
+            let tri = Triangle::new(material_id, p0, p1, p2, n1, n2, n3, uv1, uv2, uv3);
             tris.push(tri.into());
         }
     }
@@ -126,40 +118,49 @@ fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
     let mut result = Group::new(tr, tris);
     result.divide(1);
 
-    result.into()
+    (materials, result.into())
 }
 
 fn main() {
     let red_material = Material::builder().color(Color::RED).build();
+    let red_id = red_material.id;
     let green_material = Material::builder()
         .color(Color::GREEN)
         .reflection(0.3)
         .refraction(Material::IOR_GLASS)
         .transparency(0.7)
         .build();
+    let green_id = green_material.id;
     let blue_material = Material::builder()
         .color(Color::BLUE)
         .refraction(Material::IOR_GLASS)
         .transparency(0.6)
         .build();
+    let blue_id = blue_material.id;
     let cyan_material = Material::builder()
         .color(Color::CYAN)
         .reflection(0.1)
         .build();
+    let cyan_id = cyan_material.id;
     let alice_blue_material = Material::builder().color(Color::ALICE_BLUE).build();
+    let alice_blue_id = alice_blue_material.id;
     let lavender_material = Material::builder().color(Color::LAVENDER).build();
+    let lavender_id = lavender_material.id;
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let stripes = Stripes::new(&stripes_affine, Color::WHITE, Color::LIGHT_GRAY);
     let stripes_material = Material::builder().pattern(stripes.into()).build();
+    let stripes_id = stripes_material.id;
 
     let gradient_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let gradient = Gradient::new(&gradient_affine, Color::LIGHT_GRAY, Color::GRAY);
     let gradient_material = Material::builder().pattern(gradient.into()).build();
+    let gradient_id = gradient_material.id;
 
     let rings_affine = Affine3A::IDENTITY;
     let rings = Rings::new(&rings_affine, Color::YELLOW, Color::MAGENTA);
     let rings_material = Material::builder().pattern(rings.into()).build();
+    let rings_id = rings_material.id;
 
     let checkers_affine = Affine3A::IDENTITY;
     let checkers = Checkers::new(&checkers_affine, Color::WHITE, Color::BLACK);
@@ -167,38 +168,52 @@ fn main() {
         .pattern(checkers.into())
         .reflection(0.7)
         .build();
+    let checkers_id = checkers_material.id;
+
+    let mut materials = vec![
+        red_material,
+        green_material,
+        blue_material,
+        cyan_material,
+        alice_blue_material,
+        lavender_material,
+        stripes_material,
+        gradient_material,
+        rings_material,
+        checkers_material,
+    ];
 
     let s1_affine = Affine3A::from_translation(glam::vec3(-1.0, 1.0, 2.0));
-    let s1 = Sphere::new(&s1_affine, red_material);
+    let s1 = Sphere::new(&s1_affine, red_id);
     let s2_affine = Affine3A::from_translation(glam::vec3(-2.0, 1.0, 0.0));
-    let s2 = Sphere::new(&s2_affine, blue_material);
+    let s2 = Sphere::new(&s2_affine, blue_id);
     let s3_affine = Affine3A::from_translation(glam::vec3(2.0, 1.0, 0.0));
-    let s3 = Sphere::new(&s3_affine, green_material);
+    let s3 = Sphere::new(&s3_affine, green_id);
     let cube_affine = Affine3A::from_translation(glam::vec3(0.0, 1.0, -1.0))
         * Affine3A::from_rotation_y(std::f32::consts::FRAC_PI_6);
-    let cube = Cube::new(&cube_affine, cyan_material);
+    let cube = Cube::new(&cube_affine, cyan_id);
 
     let cylinder_affine = Affine3A::from_translation(glam::vec3(-3.5, 1.0, -1.5));
-    let cylinder = Cylinder::new(&cylinder_affine, alice_blue_material, (-1.0, 1.0), true);
+    let cylinder = Cylinder::new(&cylinder_affine, alice_blue_id, (-1.0, 1.0), true);
 
     let cone_affine = Affine3A::from_translation(glam::vec3(3.5, 1.0, -1.5));
-    let cone = Cone::new(&cone_affine, lavender_material, (-1.0, 0.5), true);
+    let cone = Cone::new(&cone_affine, lavender_id, (-1.0, 0.5), true);
 
-    let floor = Plane::new(&Affine3A::IDENTITY, checkers_material);
+    let floor = Plane::new(&Affine3A::IDENTITY, checkers_id);
 
     let wall1_tr = Affine3A::from_translation(glam::vec3(0.0, 0.0, 8.0))
         * Affine3A::from_rotation_y(std::f32::consts::FRAC_PI_3)
         * Affine3A::from_rotation_x(std::f32::consts::FRAC_PI_2);
-    let wall1 = Plane::new(&wall1_tr, stripes_material);
+    let wall1 = Plane::new(&wall1_tr, stripes_id);
 
     let wall2_tr = Affine3A::from_translation(glam::vec3(0.0, 0.0, 8.0))
         * Affine3A::from_rotation_y(-std::f32::consts::FRAC_PI_3)
         * Affine3A::from_rotation_x(std::f32::consts::FRAC_PI_2);
-    let wall2 = Plane::new(&wall2_tr, gradient_material);
+    let wall2 = Plane::new(&wall2_tr, gradient_id);
 
     let wall3_tr = Affine3A::from_translation(glam::vec3(0.0, 0.0, 3.0))
         * Affine3A::from_rotation_x(std::f32::consts::FRAC_PI_2);
-    let wall3 = Plane::new(&wall3_tr, rings_material);
+    let wall3 = Plane::new(&wall3_tr, rings_id);
 
     let room_shapes = vec![wall1.into(), wall2.into(), wall3.into(), floor.into()];
     let room_affine = Affine3A::from_translation(glam::vec3(0.0, 0.0, 2.0));
@@ -218,10 +233,15 @@ fn main() {
 
     let monkey_affine = Affine3A::from_translation(glam::vec3(3.0, 1.0, 0.0))
         * Affine3A::from_rotation_y(20.0f32.to_radians());
-    let monkey = load_obj("assets/models/monkey/smooth_monkey.obj", &monkey_affine);
+    let (monkey_materials, monkey) =
+        load_obj("assets/models/monkey/smooth_monkey.obj", &monkey_affine);
 
     let normal_car_affine = Affine3A::from_rotation_y(140.0f32.to_radians());
-    let normal_car = load_obj("assets/models/NormalCar1.obj", &normal_car_affine);
+    let (normal_car_materials, normal_car) =
+        load_obj("assets/models/NormalCar1.obj", &normal_car_affine);
+
+    materials.extend(monkey_materials);
+    materials.extend(normal_car_materials);
 
     let shapes = vec![shapes_group.into(), room_group.into(), monkey, normal_car];
 
@@ -238,7 +258,7 @@ fn main() {
     let lights = vec![l1, l2];
 
     let capacity = shapes.iter().map(|s: &Shape| s.max_intersections()).sum();
-    let scene = Scene::new(shapes, lights);
+    let scene = Scene::new(materials, shapes, lights);
 
     let camera_view = Affine3A::look_at_rh(
         glam::vec3(0.0, 4.0, -12.0),
