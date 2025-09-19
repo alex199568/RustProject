@@ -6,6 +6,7 @@ use crate::ray::Ray;
 use crate::scene::Scene;
 
 use crate::shape::cone::Cone;
+use crate::shape::csg::Csg;
 use crate::shape::cube::Cube;
 use crate::shape::cylinder::Cylinder;
 use crate::shape::group::Group;
@@ -91,6 +92,7 @@ pub enum Shape {
     Cone(Cone),
     Triangle(Triangle),
     Group(Group),
+    Csg(Csg),
 }
 
 impl Shape {
@@ -103,6 +105,7 @@ impl Shape {
             Shape::Cone(c) => &c.common,
             Shape::Triangle(t) => &t.common,
             Shape::Group(g) => &g.common,
+            Shape::Csg(c) => &c.common,
         }
     }
 
@@ -115,6 +118,7 @@ impl Shape {
             Shape::Cone(c) => &c.common.aabb * &c.transform.tr,
             Shape::Triangle(t) => t.common.aabb.clone(),
             Shape::Group(g) => &g.common.aabb * &g.transform.tr,
+            Shape::Csg(c) => &c.common.aabb * &c.transform.tr,
         }
     }
 
@@ -127,6 +131,7 @@ impl Shape {
             Shape::Cone(c) => &mut c.common,
             Shape::Triangle(t) => &mut t.common,
             Shape::Group(g) => &mut g.common,
+            Shape::Csg(g) => &mut g.common,
         }
     }
 
@@ -139,6 +144,7 @@ impl Shape {
             Shape::Cone(c) => c.common.intersect(&c.transform, c, ray, buffer),
             Shape::Triangle(t) => t.local_intersect(ray, buffer),
             Shape::Group(g) => g.common.intersect(&g.transform, g, ray, buffer),
+            Shape::Csg(c) => c.common.intersect(&c.transform, c, ray, buffer),
         }
     }
 
@@ -159,6 +165,7 @@ impl Shape {
             Shape::Cone(c) => c.common.normal(&c.transform, c, p, intersection),
             Shape::Triangle(t) => t.local_normal(p, intersection),
             Shape::Group(g) => g.common.normal(&g.transform, g, p, intersection),
+            Shape::Csg(c) => c.common.normal(&c.transform, c, p, intersection),
         };
 
         parent_id = self.common().parent_id;
@@ -180,7 +187,8 @@ impl Shape {
             Shape::Cylinder(c) => c.material_id,
             Shape::Cone(c) => c.material_id,
             Shape::Triangle(t) => t.material_id,
-            Shape::Group(g) => g.children[0].material_id(),
+            Shape::Group(_) => panic!("Trying to get group material"),
+            Shape::Csg(_) => panic!("Trying to get csg material"),
         }
     }
 
@@ -193,6 +201,7 @@ impl Shape {
             Shape::Cone(c) => c.transform.inv.transform_point3a(point),
             Shape::Triangle(_) => point,
             Shape::Group(g) => g.transform.inv.transform_point3a(point),
+            Shape::Csg(c) => c.transform.inv.transform_point3a(point),
         }
     }
 
@@ -205,6 +214,7 @@ impl Shape {
             Shape::Cylinder(c) => c.transform.inv_tr * normal,
             Shape::Triangle(_) => normal,
             Shape::Group(g) => g.transform.inv_tr * normal,
+            Shape::Csg(c) => c.transform.inv_tr * normal,
         }
     }
 
@@ -217,6 +227,7 @@ impl Shape {
             Shape::Cone(_) => 4,
             Shape::Triangle(_) => 1,
             Shape::Group(g) => g.children.iter().map(|c| c.max_intersections()).sum(),
+            Shape::Csg(c) => c.left.max_intersections() + c.right.max_intersections(),
         }
     }
 
@@ -232,12 +243,23 @@ impl Shape {
             // try children recursively and return the first match
             return g.children.iter().find_map(|c| c.find_by_id(id));
         }
+        if let Shape::Csg(c) = self {
+            let left = c.left.find_by_id(id);
+            if left.is_some() {
+                return left;
+            }
+            return c.right.find_by_id(id);
+        }
         None
     }
 
     pub fn divide(&mut self, threshold: usize) {
         if let Shape::Group(g) = self {
             g.divide(threshold);
+        }
+        if let Shape::Csg(c) = self {
+            c.left.divide(threshold);
+            c.right.divide(threshold)
         }
     }
 }

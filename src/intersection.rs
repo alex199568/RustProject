@@ -2,6 +2,8 @@ use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::shape::Shape;
 
+use std::cmp::Ordering;
+
 use glam::Vec2;
 use glam::Vec3A;
 
@@ -45,6 +47,11 @@ impl IntersectionBuffer {
 
     pub fn clear(&mut self) {
         self.intersections.clear();
+    }
+
+    pub fn sort(&mut self) {
+        self.intersections
+            .sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
     }
 }
 
