@@ -41,14 +41,16 @@ impl LocalShape for Sphere {
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t0,
+            uv: None,
         });
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t1,
+            uv: None,
         });
     }
 
-    fn local_normal(&self, point: Vec3A) -> Vec3A {
+    fn local_normal(&self, point: Vec3A, _intersection: Intersection) -> Vec3A {
         point
     }
 }

@@ -1,26 +1,25 @@
-
-
 use crate::ray::Ray;
-use crate::shape::Shape;
 use crate::scene::Scene;
+use crate::shape::Shape;
 
+use glam::Vec2;
 use glam::Vec3A;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub shape_id: usize,
-    pub t: f32
+    pub t: f32,
+    pub uv: Option<Vec2>,
 }
 
 pub struct IntersectionBuffer {
-    pub intersections: Vec<Intersection>
+    pub intersections: Vec<Intersection>,
 }
 
 impl IntersectionBuffer {
-
     pub fn new(capacity: usize) -> Self {
         Self {
-            intersections: Vec::with_capacity(capacity)
+            intersections: Vec::with_capacity(capacity),
         }
     }
 
@@ -60,12 +59,11 @@ pub struct Hit {
 }
 
 impl Hit {
-
     pub fn new(shape: &Shape, intersection: Intersection, ray: &Ray, scene: &Scene) -> Self {
         let point = ray.at(intersection.t);
         let eye = -ray.direction;
 
-        let mut normal = shape.normal(point, scene);
+        let mut normal = shape.normal(point, scene, intersection);
         if normal.dot(eye) < 0.0 {
             normal = -normal;
         }

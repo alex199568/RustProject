@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::aabb::Aabb;
-use crate::intersection::IntersectionBuffer;
+use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::scene::Scene;
@@ -31,7 +31,7 @@ pub struct ShapeCommon {
 
 pub trait LocalShape {
     fn local_intersect(&self, ray: &Ray, buffer: &mut IntersectionBuffer);
-    fn local_normal(&self, point: Vec3A) -> Vec3A;
+    fn local_normal(&self, point: Vec3A, intersection: Intersection) -> Vec3A;
 }
 
 impl ShapeCommon {
@@ -54,9 +54,9 @@ impl ShapeCommon {
         local.local_intersect(&transformed_ray, buffer);
     }
 
-    fn normal(&self, local: &dyn LocalShape, point: Vec3A) -> Vec3A {
+    fn normal(&self, local: &dyn LocalShape, point: Vec3A, intersection: Intersection) -> Vec3A {
         let shape_point = self.inv.transform_point3a(point);
-        let shape_normal = local.local_normal(shape_point);
+        let shape_normal = local.local_normal(shape_point, intersection);
         let world_normal = self.inv_tr * shape_normal;
         world_normal.normalize()
     }
@@ -109,7 +109,7 @@ impl Shape {
         }
     }
 
-    pub fn normal(&self, point: Vec3A, scene: &Scene) -> Vec3A {
+    pub fn normal(&self, point: Vec3A, scene: &Scene, intersection: Intersection) -> Vec3A {
         let mut p = point;
         let mut parent_id: Option<usize> = self.common().parent_id;
         while parent_id.is_some() {
@@ -119,13 +119,13 @@ impl Shape {
         }
 
         let mut shape_normal = match self {
-            Shape::Sphere(s) => s.common.normal(s, p),
-            Shape::Plane(pl) => pl.common.normal(pl, p),
-            Shape::Cube(c) => c.common.normal(c, p),
-            Shape::Cylinder(c) => c.common.normal(c, p),
-            Shape::Cone(c) => c.common.normal(c, p),
-            Shape::Triangle(t) => t.common.normal(t, p),
-            Shape::Group(g) => g.common.normal(g, p),
+            Shape::Sphere(s) => s.common.normal(s, p, intersection),
+            Shape::Plane(pl) => pl.common.normal(pl, p, intersection),
+            Shape::Cube(c) => c.common.normal(c, p, intersection),
+            Shape::Cylinder(c) => c.common.normal(c, p, intersection),
+            Shape::Cone(c) => c.common.normal(c, p, intersection),
+            Shape::Triangle(t) => t.common.normal(t, p, intersection),
+            Shape::Group(g) => g.common.normal(g, p, intersection),
         };
 
         parent_id = self.common().parent_id;

@@ -28,6 +28,7 @@ pub trait Caps {
                 buffer.add(Intersection {
                     shape_id: id,
                     t: t0,
+                    uv: None,
                 });
             }
         }
@@ -42,6 +43,7 @@ pub trait Caps {
                 buffer.add(Intersection {
                     shape_id: id,
                     t: t1,
+                    uv: None,
                 });
             }
         }

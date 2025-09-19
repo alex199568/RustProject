@@ -1,5 +1,5 @@
 use crate::aabb::Aabb;
-use crate::intersection::IntersectionBuffer;
+use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::ray::Ray;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
 use std::convert::From;
@@ -104,7 +104,7 @@ impl LocalShape for Group {
         }
     }
 
-    fn local_normal(&self, _point: Vec3A) -> Vec3A {
+    fn local_normal(&self, _point: Vec3A, _intersection: Intersection) -> Vec3A {
         panic!("Groups don't have normals")
     }
 }

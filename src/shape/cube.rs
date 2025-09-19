@@ -36,14 +36,16 @@ impl LocalShape for Cube {
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: tmin,
+            uv: None,
         });
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: tmax,
+            uv: None,
         });
     }
 
-    fn local_normal(&self, point: Vec3A) -> Vec3A {
+    fn local_normal(&self, point: Vec3A, _intersection: Intersection) -> Vec3A {
         let x = point.x.abs();
         let y = point.y.abs();
         let z = point.z.abs();

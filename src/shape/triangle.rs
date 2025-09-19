@@ -86,18 +86,20 @@ impl LocalShape for Triangle {
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t,
+            uv: Some(glam::vec2(u, v)),
         });
     }
 
-    fn local_normal(&self, _point: Vec3A) -> Vec3A {
+    fn local_normal(&self, _point: Vec3A, intersection: Intersection) -> Vec3A {
         if self.n2.is_some() {
             let n1 = self.n1;
             let n2 = self.n2.unwrap();
             let n3 = self.n3.unwrap();
 
-            // todo: get proper uv
-            let u = 0.3f32;
-            let v = 0.4f32;
+            let hit_uv = intersection.uv.unwrap_or(Vec2::ZERO);
+
+            let u = hit_uv.x;
+            let v = hit_uv.y;
 
             n2 * u + n3 * v + n1 * (1.0 - u - v)
         } else {

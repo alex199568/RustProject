@@ -83,7 +83,8 @@ impl LocalShape for Cone {
                 if self.range.0 < y && y < self.range.1 {
                     buffer.add(Intersection {
                         shape_id: self.common.id,
-                        t,
+                        t: t,
+                        uv: None,
                     });
                 }
             }
@@ -113,6 +114,7 @@ impl LocalShape for Cone {
                 buffer.add(Intersection {
                     shape_id: self.common.id,
                     t: t0,
+                    uv: None,
                 });
             }
         }
@@ -124,12 +126,13 @@ impl LocalShape for Cone {
                 buffer.add(Intersection {
                     shape_id: self.common.id,
                     t: t1,
+                    uv: None,
                 });
             }
         }
     }
 
-    fn local_normal(&self, p: Vec3A) -> Vec3A {
+    fn local_normal(&self, p: Vec3A, _intersection: Intersection) -> Vec3A {
         // For a 45° double cone x^2 + z^2 - y^2 = 0:
         // Side normal: (x, ±sqrt(x^2+z^2), z) with sign depending on y
         // Cap normals handled first if you have finite caps with radius |y|.

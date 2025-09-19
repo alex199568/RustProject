@@ -35,10 +35,11 @@ impl LocalShape for Plane {
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t,
+            uv: None,
         });
     }
 
-    fn local_normal(&self, _point: Vec3A) -> Vec3A {
+    fn local_normal(&self, _point: Vec3A, _intersection: Intersection) -> Vec3A {
         Vec3A::Y
     }
 }
