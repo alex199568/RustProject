@@ -43,63 +43,33 @@ impl Color {
         [enc(self.r), enc(self.g), enc(self.b)]
     }
 
-    pub const WHITE: Color = Color {
-        r: 1.0,
-        g: 1.0,
-        b: 1.0,
-    };
-    pub const LIGHT_GRAY: Color = Color {
-        r: 0.75,
-        g: 0.75,
-        b: 0.75,
-    };
-    pub const GRAY: Color = Color {
-        r: 0.5,
-        g: 0.5,
-        b: 0.5,
-    };
+    pub const WHITE: Color = Color::hex(0xFFFFFF);
+    pub const SNOW: Color = Color::hex(0xFFFAFA);
+    pub const GAINSBORO: Color = Color::hex(0xDCDCDC);
+    pub const LIGHT_GRAY: Color = Color::hex(0xD3D3D3);
+    pub const SILVER: Color = Color::hex(0xC0C0C0);
+    pub const GRAY: Color = Color::hex(0x808080);
     pub const DARK_GRAY: Color = Color {
         r: 0.25,
         g: 0.25,
         b: 0.25,
     };
-    pub const BLACK: Color = Color {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
-    };
+    pub const DARK_SLATE_GRAY: Color = Color::hex(0x2F4F4F);
+    pub const BLACK: Color = Color::hex(0x000000);
 
-    pub const RED: Color = Color {
-        r: 1.0,
-        g: 0.0,
-        b: 0.0,
-    };
-    pub const GREEN: Color = Color {
-        r: 0.0,
-        g: 1.0,
-        b: 0.0,
-    };
-    pub const BLUE: Color = Color {
-        r: 0.0,
-        g: 0.0,
-        b: 1.0,
-    };
+    pub const RED: Color = Color::hex(0xFF0000);
+    pub const INDIAN_RED: Color = Color::hex(0xCD5C5C);
+    pub const GREEN: Color = Color::hex(0x00FF00);
+    pub const FOREST_GREEN: Color = Color::hex(0x228B22);
+    pub const BLUE: Color = Color::hex(0x0000FF);
+    pub const STEEL_BLUE: Color = Color::hex(0x4682B4);
 
-    pub const YELLOW: Color = Color {
-        r: 1.0,
-        g: 1.0,
-        b: 0.0,
-    };
-    pub const CYAN: Color = Color {
-        r: 0.0,
-        g: 1.0,
-        b: 1.0,
-    };
-    pub const MAGENTA: Color = Color {
-        r: 1.0,
-        g: 0.0,
-        b: 1.0,
-    };
+    pub const YELLOW: Color = Color::hex(0xFFFF00);
+    pub const GOLD: Color = Color::hex(0xFFD700);
+    pub const CYAN: Color = Color::hex(0x00FFFF);
+    pub const TURQUOISE: Color = Color::hex(0x40E0D0);
+    pub const MAGENTA: Color = Color::hex(0xFF00FF);
+    pub const VIOLET: Color = Color::hex(0xEE82EE);
 
     pub const ALICE_BLUE: Color = Color::hex(0xF0F8FF);
     pub const LAVENDER: Color = Color::hex(0xe6e6fa);

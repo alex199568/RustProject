@@ -122,23 +122,23 @@ fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> (Vec<Material>, Shap
 }
 
 fn main() {
-    let red_material = Material::builder().color(Color::RED).build();
+    let red_material = Material::builder().color(Color::INDIAN_RED).build();
     let red_id = red_material.id;
     let green_material = Material::builder()
-        .color(Color::GREEN)
+        .color(Color::FOREST_GREEN)
         .reflection(0.3)
         .refraction(Material::IOR_GLASS)
         .transparency(0.7)
         .build();
     let green_id = green_material.id;
     let blue_material = Material::builder()
-        .color(Color::BLUE)
+        .color(Color::STEEL_BLUE)
         .refraction(Material::IOR_GLASS)
         .transparency(0.6)
         .build();
     let blue_id = blue_material.id;
     let cyan_material = Material::builder()
-        .color(Color::CYAN)
+        .color(Color::TURQUOISE)
         .reflection(0.1)
         .build();
     let cyan_id = cyan_material.id;
@@ -148,25 +148,25 @@ fn main() {
     let lavender_id = lavender_material.id;
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
-    let stripes = Stripes::new(&stripes_affine, Color::WHITE, Color::LIGHT_GRAY);
+    let stripes = Stripes::new(&stripes_affine, Color::SNOW, Color::SILVER);
     let stripes_material = Material::builder().pattern(stripes.into()).build();
     let stripes_id = stripes_material.id;
 
     let gradient_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
-    let gradient = Gradient::new(&gradient_affine, Color::LIGHT_GRAY, Color::GRAY);
+    let gradient = Gradient::new(&gradient_affine, Color::GAINSBORO, Color::SILVER);
     let gradient_material = Material::builder().pattern(gradient.into()).build();
     let gradient_id = gradient_material.id;
 
     let rings_affine = Affine3A::IDENTITY;
-    let rings = Rings::new(&rings_affine, Color::YELLOW, Color::MAGENTA);
+    let rings = Rings::new(&rings_affine, Color::GOLD, Color::VIOLET);
     let rings_material = Material::builder().pattern(rings.into()).build();
     let rings_id = rings_material.id;
 
     let checkers_affine = Affine3A::IDENTITY;
-    let checkers = Checkers::new(&checkers_affine, Color::WHITE, Color::BLACK);
+    let checkers = Checkers::new(&checkers_affine, Color::SNOW, Color::DARK_SLATE_GRAY);
     let checkers_material = Material::builder()
         .pattern(checkers.into())
-        .reflection(0.7)
+        .reflection(0.3)
         .build();
     let checkers_id = checkers_material.id;
 
@@ -216,7 +216,7 @@ fn main() {
     let wall3 = Plane::new(&wall3_tr, rings_id);
 
     let room_shapes = vec![wall1.into(), wall2.into(), wall3.into(), floor.into()];
-    let room_affine = Affine3A::from_translation(glam::vec3(0.0, 0.0, 2.0));
+    let room_affine = Affine3A::from_translation(glam::vec3(0.0, 0.0, 4.0));
     let room_group = Group::new(&room_affine, room_shapes);
 
     let prim_shapes = vec![
@@ -231,12 +231,13 @@ fn main() {
         * Affine3A::from_scale(glam::vec3(0.5, 0.5, 0.5));
     let shapes_group = Group::new(&shapes_affine, prim_shapes);
 
-    let monkey_affine = Affine3A::from_translation(glam::vec3(3.0, 1.0, 0.0))
+    let monkey_affine = Affine3A::from_translation(glam::vec3(4.0, 1.0, 0.0))
         * Affine3A::from_rotation_y(20.0f32.to_radians());
     let (monkey_materials, monkey) =
         load_obj("assets/models/monkey/smooth_monkey.obj", &monkey_affine);
 
-    let normal_car_affine = Affine3A::from_rotation_y(140.0f32.to_radians());
+    let normal_car_affine = Affine3A::from_translation(glam::vec3(-4.0, 0.0, -2.0))
+        * Affine3A::from_rotation_y(140.0f32.to_radians());
     let (normal_car_materials, normal_car) =
         load_obj("assets/models/NormalCar1.obj", &normal_car_affine);
 
@@ -248,12 +249,12 @@ fn main() {
     let l1_position = glam::vec3a(-3.0, 2.0, -16.0);
     let l1 = Light {
         position: l1_position,
-        intensity: Color::LIGHT_GRAY,
+        intensity: Color::WHITE * 0.3,
     };
     let l2_position = glam::vec3a(10.0, 10.0, -16.0);
     let l2 = Light {
         position: l2_position,
-        intensity: Color::GRAY,
+        intensity: Color::WHITE * 0.6,
     };
     let lights = vec![l1, l2];
 
@@ -298,7 +299,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/normal_car2.png";
+    let filepath = "renders/csg.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e),
