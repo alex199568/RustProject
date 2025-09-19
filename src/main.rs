@@ -10,6 +10,7 @@ mod ray;
 mod scene;
 pub mod shape;
 
+use std::path::Path;
 use std::time::Instant;
 
 use rayon::prelude::*;
@@ -40,9 +41,10 @@ fn to_material(obj_mat: &tobj::Material) -> Material {
         .build()
 }
 
-fn load_obj(tr: &Affine3A) -> Shape {
+fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> Shape {
+    let path_ref: &Path = file_path.as_ref();
     let (models, materials) = tobj::load_obj(
-        "assets/models/monkey/smooth_monkey.obj",
+        path_ref,
         &tobj::LoadOptions {
             triangulate: true,
             ..Default::default()
@@ -214,13 +216,21 @@ fn main() {
         * Affine3A::from_scale(glam::vec3(0.5, 0.5, 0.5));
     let shapes_group = Group::new(&shapes_affine, prim_shapes);
 
-    let monkey_affine = Affine3A::from_translation(glam::vec3(0.0, 1.0, 0.0))
+    let monkey_affine = Affine3A::from_translation(glam::vec3(3.0, 1.0, 0.0))
         * Affine3A::from_rotation_y(20.0f32.to_radians());
-    let monkey = load_obj(&monkey_affine);
+    let monkey = load_obj("assets/models/monkey/smooth_monkey.obj", &monkey_affine);
 
-    let shapes = vec![shapes_group.into(), room_group.into(), monkey];
+    let normal_car_affine = Affine3A::from_rotation_y(140.0f32.to_radians());
+    let normal_car = load_obj("assets/models/NormalCar1.obj", &normal_car_affine);
 
-    let l1_position = glam::vec3a(-10.0, 10.0, -10.0);
+    let shapes = vec![
+        shapes_group.into(),
+        room_group.into(),
+        monkey,
+        normal_car.into(),
+    ];
+
+    let l1_position = glam::vec3a(-10.0, 3.0, -10.0);
     let l1 = Light {
         position: l1_position,
         intensity: Color::GRAY,
@@ -228,7 +238,7 @@ fn main() {
     let l2_position = glam::vec3a(8.0, 8.0, -8.0);
     let l2 = Light {
         position: l2_position,
-        intensity: Color::DARK_GRAY,
+        intensity: Color::GRAY,
     };
     let lights = vec![l1, l2];
 
@@ -273,7 +283,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/monkey.png";
+    let filepath = "renders/normal_car.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e),
