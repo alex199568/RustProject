@@ -43,16 +43,20 @@ impl Scene {
             direction: direction,
         };
         self.intersect(&r, buffer);
-        if let Some(hit) = buffer.hit_ignoring(shape_id) {
-            return if hit.t < distance {
-                let s = self.find_shape_by_id(hit.shape_id);
-                let transparency = s.material().transparency;
-                1.0 - transparency
-            } else {
-                0.0
-            };
+
+        let mut transittance = 1.0f32; // transmittance (1=fully visible)
+        for i in buffer
+            .intersections
+            .iter()
+            .filter(|i| i.t > 1e-4 && i.t < distance && i.shape_id != shape_id)
+        {
+            let s = self.find_shape_by_id(i.shape_id);
+            let tau = s.material().transparency.clamp(0.0, 1.0); // per-surface transmittance
+            transittance *= tau; // multiply through each layer
+            // might break early if transittance is nearly 0, this way intersections need to be sorted by t
         }
-        0.0
+
+        transittance
     }
 
     fn shade(&self, hit: &Hit, shape: &Shape, buffer: &mut IntersectionBuffer) -> Color {
@@ -64,8 +68,7 @@ impl Scene {
 
         for light in &self.lights {
             let s = self.shadow(light, hit.shape_id, hit.over_point, buffer);
-            let sf = 1.0 - s;
-            let c = light.shade(shape, hit, self) * sf;
+            let c = light.shade(shape, hit, self) * s;
             surface += c;
         }
 
