@@ -1,7 +1,7 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::ray::Ray;
-use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
+use crate::shape::shape::{LocalShape, Shape, ShapeCommon, ShapeTransform};
 use std::convert::From;
 
 use glam::Affine3A;
@@ -9,6 +9,7 @@ use glam::Vec3A;
 
 pub struct Plane {
     pub common: ShapeCommon,
+    pub transform: ShapeTransform,
     pub material_id: usize,
 }
 
@@ -19,7 +20,8 @@ impl Plane {
             glam::vec3a(std::f32::MAX, 0.0, std::f32::MAX),
         );
         Self {
-            common: ShapeCommon::new(transform, bounds),
+            common: ShapeCommon::new(bounds),
+            transform: ShapeTransform::new(transform),
             material_id: material,
         }
     }

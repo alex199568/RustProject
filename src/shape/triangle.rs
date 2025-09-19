@@ -4,7 +4,6 @@ use crate::ray::Ray;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
 use std::convert::From;
 
-use glam::Affine3A;
 use glam::Vec2;
 use glam::Vec3A;
 
@@ -44,7 +43,7 @@ impl Triangle {
         let e2 = p3 - p1;
         let n = n1.unwrap_or(e2.cross(e1));
         Self {
-            common: ShapeCommon::new(&Affine3A::IDENTITY, bounds),
+            common: ShapeCommon::new(bounds),
             material_id: material,
             p1: p1,
             e1: e1,

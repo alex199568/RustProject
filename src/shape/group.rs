@@ -1,7 +1,7 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::ray::Ray;
-use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
+use crate::shape::shape::{LocalShape, Shape, ShapeCommon, ShapeTransform};
 use std::convert::From;
 
 use glam::Affine3A;
@@ -9,6 +9,7 @@ use glam::Vec3A;
 
 pub struct Group {
     pub common: ShapeCommon,
+    pub transform: ShapeTransform,
     pub children: Vec<Shape>,
 }
 
@@ -16,17 +17,16 @@ impl Group {
     pub fn new(tr: &Affine3A, mut children: Vec<Shape>) -> Self {
         let mut bounds = Aabb::default();
         for child in &children {
-            let c = child.common();
-            let bounds_tr = &c.aabb * &c.tr;
-            bounds += &bounds_tr;
+            bounds += &child.parent_space_bounds();
         }
 
-        let common = ShapeCommon::new(tr, bounds);
+        let common = ShapeCommon::new(bounds);
         for child in &mut children {
             child.common_mut().parent_id = Some(common.id)
         }
         Self {
             common: common,
+            transform: ShapeTransform::new(tr),
             children: children,
         }
     }
@@ -40,8 +40,7 @@ impl Group {
 
         // Move children out of self
         for child in std::mem::take(&mut self.children) {
-            let c = child.common();
-            let parent_space_bounds = &c.aabb * &c.tr;
+            let parent_space_bounds = child.parent_space_bounds();
 
             if leftb.contains_aabb(&parent_space_bounds) {
                 left.push(child);

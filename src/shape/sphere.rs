@@ -1,7 +1,7 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::ray::Ray;
-use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
+use crate::shape::shape::{LocalShape, Shape, ShapeCommon, ShapeTransform};
 use std::convert::From;
 
 use glam::Affine3A;
@@ -9,6 +9,7 @@ use glam::Vec3A;
 
 pub struct Sphere {
     pub common: ShapeCommon,
+    pub transform: ShapeTransform,
     pub material_id: usize,
 }
 
@@ -16,7 +17,8 @@ impl Sphere {
     pub fn new(transform: &Affine3A, material: usize) -> Self {
         let bounds = Aabb::new(glam::vec3a(-1.0, -1.0, -1.0), glam::vec3a(1.0, 1.0, 1.0));
         Self {
-            common: ShapeCommon::new(transform, bounds),
+            common: ShapeCommon::new(bounds),
+            transform: ShapeTransform::new(transform),
             material_id: material,
         }
     }

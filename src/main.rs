@@ -298,7 +298,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/normal_car.png";
+    let filepath = "renders/normal_car2.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e),

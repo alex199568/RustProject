@@ -5,6 +5,7 @@ use crate::ray::Ray;
 
 use std::ops::AddAssign;
 
+#[derive(Clone)]
 pub struct Aabb {
     from: Vec3A,
     to: Vec3A,

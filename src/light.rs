@@ -16,10 +16,10 @@ impl Light {
         let material_color = match &material.pattern {
             Some(p) => {
                 let mut parent_id = shape.parent_id();
-                let mut point = shape.inv().transform_point3a(hit.point);
+                let mut point = shape.transform_point(hit.point);
                 while parent_id.is_some() {
                     let parent_shape = scene.find_shape_by_id(parent_id.unwrap());
-                    point = parent_shape.inv().transform_point3a(point);
+                    point = parent_shape.transform_point(point);
                     parent_id = parent_shape.parent_id();
                 }
 

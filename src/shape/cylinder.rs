@@ -2,7 +2,7 @@ use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
 use crate::ray::Ray;
 use crate::shape::caps::Caps;
-use crate::shape::shape::{LocalShape, Shape, ShapeCommon};
+use crate::shape::shape::{LocalShape, Shape, ShapeCommon, ShapeTransform};
 use std::convert::From;
 
 use glam::Affine3A;
@@ -10,6 +10,7 @@ use glam::Vec3A;
 
 pub struct Cylinder {
     pub common: ShapeCommon,
+    pub transform: ShapeTransform,
     pub material_id: usize,
     range: (f32, f32),
     caps: bool,
@@ -22,7 +23,8 @@ impl Cylinder {
             glam::vec3a(1.0, range.1, 1.0),
         );
         Self {
-            common: ShapeCommon::new(tr, bounds),
+            common: ShapeCommon::new(bounds),
+            transform: ShapeTransform::new(tr),
             material_id: material,
             range: range,
             caps: caps,
