@@ -1,19 +1,17 @@
-
 use crate::color::Color;
-use crate::shape::Shape;
-use crate::scene::Scene;
 use crate::intersection::Hit;
+use crate::scene::Scene;
+use crate::shape::Shape;
 
 use glam::Vec3A;
 
 pub struct Light {
     pub position: Vec3A,
-    pub intensity: Color
+    pub intensity: Color,
 }
 
 impl Light {
-
-    pub fn shade(&self, shape: &Shape, hit: &Hit, shadow: f32, scene: &Scene) -> Color {
+    pub fn shade(&self, shape: &Shape, hit: &Hit, scene: &Scene) -> Color {
         let material = shape.material();
         let material_color = match &material.pattern {
             Some(p) => {
@@ -26,14 +24,14 @@ impl Light {
                 }
 
                 p.at(point)
-            },
-            None => material.color
+            }
+            None => material.color,
         };
 
-        let effective_color = material_color * self.intensity * (1.0 - shadow);
-        
+        let effective_color = material_color * self.intensity;
+
         let light_v = (self.position - hit.point).normalize();
-        let ambient= effective_color * material.ambient;
+        let ambient = effective_color * material.ambient;
         let light_dot_normal = light_v.dot(hit.normal);
         if light_dot_normal < 0.0 {
             return ambient;

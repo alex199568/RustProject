@@ -223,19 +223,14 @@ fn main() {
     let normal_car_affine = Affine3A::from_rotation_y(140.0f32.to_radians());
     let normal_car = load_obj("assets/models/NormalCar1.obj", &normal_car_affine);
 
-    let shapes = vec![
-        shapes_group.into(),
-        room_group.into(),
-        monkey,
-        normal_car.into(),
-    ];
+    let shapes = vec![shapes_group.into(), room_group.into(), monkey, normal_car];
 
-    let l1_position = glam::vec3a(-10.0, 3.0, -10.0);
+    let l1_position = glam::vec3a(-3.0, 2.0, -16.0);
     let l1 = Light {
         position: l1_position,
-        intensity: Color::GRAY,
+        intensity: Color::LIGHT_GRAY,
     };
-    let l2_position = glam::vec3a(8.0, 8.0, -8.0);
+    let l2_position = glam::vec3a(10.0, 10.0, -16.0);
     let l2 = Light {
         position: l2_position,
         intensity: Color::GRAY,
