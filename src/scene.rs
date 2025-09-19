@@ -3,6 +3,7 @@ use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
+use crate::light::AreaLight;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::Shape;
@@ -13,14 +14,21 @@ pub struct Scene {
     materials: Vec<Material>,
     shapes: Vec<Shape>,
     lights: Vec<Light>,
+    area_lights: Vec<AreaLight>,
 }
 
 impl Scene {
-    pub fn new(materials: Vec<Material>, shapes: Vec<Shape>, lights: Vec<Light>) -> Self {
+    pub fn new(
+        materials: Vec<Material>,
+        shapes: Vec<Shape>,
+        lights: Vec<Light>,
+        area_lights: Vec<AreaLight>,
+    ) -> Self {
         Self {
             materials: materials,
             shapes: shapes,
             lights: lights,
+            area_lights: area_lights,
         }
     }
 
@@ -33,12 +41,12 @@ impl Scene {
 
     fn shadow(
         &self,
-        light: &Light,
+        light_position: Vec3A,
         shape_id: usize,
         point: Vec3A,
         buffer: &mut IntersectionBuffer,
     ) -> f32 {
-        let v = light.position - point;
+        let v = light_position - point;
         let distance = v.length();
         let direction = v / distance;
         let r = Ray {
@@ -63,6 +71,36 @@ impl Scene {
         transittance
     }
 
+    fn light_intensity(
+        &self,
+        shape_id: usize,
+        light: &Light,
+        point: Vec3A,
+        buffer: &mut IntersectionBuffer,
+    ) -> f32 {
+        self.shadow(light.position, shape_id, point, buffer)
+    }
+
+    fn area_light_intensity(
+        &self,
+        shape_id: usize,
+        light: &AreaLight,
+        point: Vec3A,
+        buffer: &mut IntersectionBuffer,
+    ) -> f32 {
+        let mut total = 0.0f32;
+
+        for v in 0..light.vsteps {
+            for u in 0..light.usteps {
+                let position = light.point_on(u as f32, v as f32);
+                let s = self.shadow(position, shape_id, point, buffer);
+                total += s;
+            }
+        }
+
+        total / light.samples as f32
+    }
+
     fn shade(
         &self,
         hit: &Hit,
@@ -77,8 +115,15 @@ impl Scene {
         };
 
         for light in &self.lights {
-            let s = self.shadow(light, hit.shape_id, hit.over_point, buffer);
-            let c = light.shade(shape, material, hit, self) * s;
+            // let s = self.shadow(light.position, hit.shape_id, hit.over_point, buffer);
+            let intensity = self.light_intensity(hit.shape_id, light, hit.over_point, buffer);
+            let c = light.shade(shape, material, hit, self) * intensity;
+            surface += c;
+        }
+
+        for light in &self.area_lights {
+            let intensity = self.area_light_intensity(hit.shape_id, light, hit.over_point, buffer);
+            let c = light.shade(shape, material, hit, self) * intensity;
             surface += c;
         }
 

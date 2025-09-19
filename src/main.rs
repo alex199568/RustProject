@@ -23,6 +23,7 @@ use crate::camera::Camera;
 use crate::color::Color;
 use crate::img::AccImg;
 use crate::intersection::IntersectionBuffer;
+use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{Checkers, Gradient, Rings, Stripes};
@@ -303,19 +304,29 @@ fn main() {
     ];
 
     let l1_position = glam::vec3a(-3.0, 2.0, -16.0);
-    let l1 = Light {
-        position: l1_position,
-        intensity: Color::WHITE * 0.4,
-    };
     let l2_position = glam::vec3a(10.0, 10.0, -16.0);
-    let l2 = Light {
-        position: l2_position,
-        intensity: Color::WHITE * 0.7,
-    };
-    let lights = vec![l1, l2];
+    let lights: Vec<Light> = vec![];
+
+    let al1 = AreaLight::new(
+        l1_position,
+        glam::vec3a(0.2, 0.0, 0.0),
+        2,
+        glam::vec3a(0.0, 0.2, 0.0),
+        2,
+        Color::WHITE * 0.4,
+    );
+    let al2 = AreaLight::new(
+        l2_position,
+        glam::vec3a(0.2, 0.0, 0.0),
+        2,
+        glam::vec3a(0.0, 0.2, 0.0),
+        2,
+        Color::WHITE * 0.7,
+    );
+    let area_lights: Vec<AreaLight> = vec![al1, al2];
 
     let capacity = shapes.iter().map(|s: &Shape| s.max_intersections()).sum();
-    let scene = Scene::new(materials, shapes, lights);
+    let scene = Scene::new(materials, shapes, lights, area_lights);
 
     let camera_view = Affine3A::look_at_rh(
         glam::vec3(0.0, 4.0, -12.0),
@@ -355,7 +366,7 @@ fn main() {
     let elapsed = start.elapsed();
     println!("Rendering time: {:.3} ms", elapsed.as_secs_f64() * 1e3);
 
-    let filepath = "renders/csg.png";
+    let filepath = "renders/area_light.png";
     match aimg.img().save(filepath) {
         Ok(_) => println!("Render saved to: {}", filepath),
         Err(e) => eprintln!("Failed to save image: {}", e),
