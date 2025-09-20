@@ -12,8 +12,8 @@ use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{
-    AlignCheck, Checkers, CylindricalTexture, Gradient, PlanarTexture, Rings, SphericalTexture,
-    Stripes, UvCheckers,
+    AlignCheck, Checkers, CubeTexture, CylindricalTexture, Gradient, PlanarTexture, Rings,
+    SphericalTexture, Stripes, UvCheckers,
 };
 use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
@@ -26,7 +26,7 @@ pub fn scene2() -> Scene {
     };
     let sphere_texture = SphericalTexture::new(sphere_checkers.into());
     let sphere_material = Material::builder().pattern(sphere_texture.into()).build();
-    let sphere_affine = translate(-2.0, 1.0, 0.0);
+    let sphere_affine = translate(-3.0, 1.0, 0.0);
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
     let plane_pattern = AlignCheck {
@@ -40,6 +40,22 @@ pub fn scene2() -> Scene {
     let plane_material = Material::builder().pattern(plane_texture.into()).build();
     let plane = Plane::new(&Affine3A::IDENTITY, plane_material.id);
 
+    let cube_pattern = AlignCheck {
+        main: Color::GOLD,
+        ul: Color::INDIAN_RED,
+        ur: Color::STEEL_BLUE,
+        bl: Color::VIOLET,
+        br: Color::FOREST_GREEN,
+    };
+    let cube_texture = CubeTexture::new(cube_pattern.into());
+    let cube_material = Material::builder()
+        .pattern(cube_texture.into())
+        .transparency(0.2)
+        .refraction(Material::IOR_VACUUM)
+        .build();
+    let cube_affine = translate(0.0, 1.0, 0.0) * rotate_yd(15.0);
+    let cube = Cube::new(&cube_affine, cube_material.id);
+
     let cylinder_checkers = UvCheckers {
         width: 16,
         height: 8,
@@ -49,7 +65,7 @@ pub fn scene2() -> Scene {
     let cylinder_texture = CylindricalTexture::new(cylinder_checkers.into());
     let cylinder_material = Material::builder().pattern(cylinder_texture.into()).build();
     let cylinder = Cylinder::new(
-        &translate(2.0, 0.0, 0.0),
+        &translate(3.0, 0.0, 0.0),
         cylinder_material.id,
         (0.0, 2.0),
         true,
@@ -64,8 +80,13 @@ pub fn scene2() -> Scene {
         intensity: Color::WHITE * 0.5,
     };
 
-    let materials = vec![sphere_material, plane_material, cylinder_material];
-    let shapes = vec![sphere.into(), plane.into(), cylinder.into()];
+    let materials = vec![
+        sphere_material,
+        plane_material,
+        cylinder_material,
+        cube_material,
+    ];
+    let shapes = vec![sphere.into(), plane.into(), cylinder.into(), cube.into()];
     let lights = vec![l1, l2];
     let area_lights = vec![];
 
