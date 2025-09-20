@@ -11,22 +11,14 @@ mod render;
 mod robj;
 mod scene;
 mod scene1;
+mod scene2;
 pub mod shape;
+mod transform;
 
-use glam::Affine3A;
-use glam::Vec3;
-
-use crate::camera::Camera;
-use crate::color::Color;
-use crate::light::AreaLight;
 use crate::light::Light;
-use crate::material::Material;
-use crate::pattern::{Checkers, Gradient, Rings, Stripes};
-use crate::scene::Scene;
-use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
 fn main() {
-    let scene = scene1::scene1();
+    let scene = scene2::scene2();
 
-    render::render(&scene, "renders/area_lights.png");
+    render::render(&scene, "renders/uv/image1.png");
 }
