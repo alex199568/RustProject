@@ -43,6 +43,24 @@ impl Color {
         [enc(self.r), enc(self.g), enc(self.b)]
     }
 
+    #[inline]
+    pub fn from_srgb8(r: u8, g: u8, b: u8) -> Self {
+        fn srgb_to_linear(c: u8) -> f32 {
+            let c = c as f32 / 255.0;
+            if c <= 0.04045 {
+                c / 12.92
+            } else {
+                ((c + 0.055) / 1.055).powf(2.4)
+            }
+        }
+
+        Self {
+            r: srgb_to_linear(r),
+            g: srgb_to_linear(g),
+            b: srgb_to_linear(b),
+        }
+    }
+
     pub const WHITE: Color = Color::hex(0xFFFFFF);
     pub const SNOW: Color = Color::hex(0xFFFAFA);
     pub const GAINSBORO: Color = Color::hex(0xDCDCDC);

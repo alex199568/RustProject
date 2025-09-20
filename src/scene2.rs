@@ -3,6 +3,7 @@ use crate::scene::Scene;
 use glam::Affine3A;
 use glam::Vec3;
 
+use crate::img::Img;
 use crate::robj::load_obj;
 use crate::transform::{rotate_yd, scale, translate};
 
@@ -13,7 +14,7 @@ use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{
     AlignCheck, Checkers, CubeTexture, CylindricalTexture, Gradient, PlanarTexture, Rings,
-    SphericalTexture, Stripes, UvCheckers,
+    SphericalTexture, Stripes, UvCheckers, UvImage,
 };
 use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
@@ -53,7 +54,7 @@ pub fn scene2() -> Scene {
         .transparency(0.2)
         .refraction(Material::IOR_VACUUM)
         .build();
-    let cube_affine = translate(0.0, 1.0, 0.0) * rotate_yd(15.0);
+    let cube_affine = translate(0.0, 1.0, 3.0) * rotate_yd(15.0);
     let cube = Cube::new(&cube_affine, cube_material.id);
 
     let cylinder_checkers = UvCheckers {
@@ -71,6 +72,13 @@ pub fn scene2() -> Scene {
         true,
     );
 
+    let earth_image = Img::load("assets/images/world-map.gif").unwrap();
+    let uvimage = UvImage::new(earth_image, true);
+    let earth_texture = SphericalTexture::new(uvimage.into());
+    let earth_material = Material::builder().pattern(earth_texture.into()).build();
+    let earth_affine = translate(0.0, 1.0, 0.0) * rotate_yd(45.0);
+    let earth = Sphere::new(&earth_affine, earth_material.id);
+
     let l1 = Light {
         position: glam::vec3a(-10.0, 10.0, -10.0),
         intensity: Color::WHITE * 0.7,
@@ -85,8 +93,15 @@ pub fn scene2() -> Scene {
         plane_material,
         cylinder_material,
         cube_material,
+        earth_material,
     ];
-    let shapes = vec![sphere.into(), plane.into(), cylinder.into(), cube.into()];
+    let shapes = vec![
+        sphere.into(),
+        plane.into(),
+        cylinder.into(),
+        cube.into(),
+        earth.into(),
+    ];
     let lights = vec![l1, l2];
     let area_lights = vec![];
 
