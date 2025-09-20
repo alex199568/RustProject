@@ -127,25 +127,58 @@ impl LocalPattern for Checkers {
     }
 }
 
-pub struct Texture {
+pub struct SphericalTexture {
     common: PatternCommon,
     uv_pattern: UvCheckers,
-    uv_mapper: SphericalMapper,
 }
 
-impl Texture {
-    pub fn new(transform: &Affine3A, uv_pattern: UvCheckers, uv_mapper: SphericalMapper) -> Self {
+impl SphericalTexture {
+    fn map_point(p: Vec3A) -> Vec2 {
+        let theta = libm::atan2f(p.x, p.z);
+        let r = p.length();
+        let phi = libm::acosf(p.y / r);
+        let raw_u = theta / (std::f32::consts::PI * 2.0);
+        let u = 1.0 - (raw_u + 0.5);
+        let v = 1.0 - phi / std::f32::consts::PI;
+        glam::vec2(u, v)
+    }
+
+    pub fn new(transform: &Affine3A, uv_pattern: UvCheckers) -> Self {
         Self {
             common: PatternCommon::new(transform),
             uv_pattern: uv_pattern,
-            uv_mapper: uv_mapper,
         }
     }
 }
 
-impl LocalPattern for Texture {
+impl LocalPattern for SphericalTexture {
     fn local_at(&self, point: Vec3A) -> Color {
-        let uv = self.uv_mapper.map_point(point);
+        let uv = Self::map_point(point);
+        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+    }
+}
+
+pub struct PlanarTexture {
+    common: PatternCommon,
+    uv_pattern: UvCheckers,
+}
+
+impl PlanarTexture {
+    pub fn new(uv_pattern: UvCheckers) -> Self {
+        Self {
+            common: PatternCommon::new(&Affine3A::IDENTITY),
+            uv_pattern: uv_pattern,
+        }
+    }
+
+    fn map_point(point: Vec3A) -> Vec2 {
+        glam::vec2(point.x.fract(), point.z.fract())
+    }
+}
+
+impl LocalPattern for PlanarTexture {
+    fn local_at(&self, point: Vec3A) -> Color {
+        let uv = Self::map_point(point);
         self.uv_pattern.uv_pattern_at(uv.x, uv.y)
     }
 }
@@ -155,7 +188,8 @@ pub enum Pattern {
     Gradient(Gradient),
     Rings(Rings),
     Checkers(Checkers),
-    Texture(Texture),
+    SphericalTexture(SphericalTexture),
+    PlanarTexture(PlanarTexture),
 }
 
 impl Pattern {
@@ -165,7 +199,8 @@ impl Pattern {
             Pattern::Gradient(g) => g.common.at(g, point),
             Pattern::Rings(r) => r.common.at(r, point),
             Pattern::Checkers(c) => c.common.at(c, point),
-            Pattern::Texture(t) => t.common.at(t, point),
+            Pattern::SphericalTexture(st) => st.common.at(st, point),
+            Pattern::PlanarTexture(pt) => pt.common.at(pt, point),
         }
     }
 }
@@ -194,9 +229,15 @@ impl From<Checkers> for Pattern {
     }
 }
 
-impl From<Texture> for Pattern {
-    fn from(t: Texture) -> Self {
-        Pattern::Texture(t)
+impl From<SphericalTexture> for Pattern {
+    fn from(t: SphericalTexture) -> Self {
+        Pattern::SphericalTexture(t)
+    }
+}
+
+impl From<PlanarTexture> for Pattern {
+    fn from(t: PlanarTexture) -> Self {
+        Pattern::PlanarTexture(t)
     }
 }
 
@@ -216,19 +257,5 @@ impl UvCheckers {
         } else {
             self.b
         }
-    }
-}
-
-pub struct SphericalMapper {}
-
-impl SphericalMapper {
-    pub fn map_point(&self, p: Vec3A) -> Vec2 {
-        let theta = libm::atan2f(p.x, p.z);
-        let r = p.length();
-        let phi = libm::acosf(p.y / r);
-        let raw_u = theta / (std::f32::consts::PI * 2.0);
-        let u = 1.0 - (raw_u + 0.5);
-        let v = 1.0 - phi / std::f32::consts::PI;
-        glam::vec2(u, v)
     }
 }
