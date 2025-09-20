@@ -12,7 +12,8 @@ use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{
-    Checkers, Gradient, PlanarTexture, Rings, SphericalTexture, Stripes, UvCheckers,
+    Checkers, CylindricalTexture, Gradient, PlanarTexture, Rings, SphericalTexture, Stripes,
+    UvCheckers,
 };
 use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
@@ -25,7 +26,7 @@ pub fn scene2() -> Scene {
     };
     let sphere_texture = SphericalTexture::new(&Affine3A::IDENTITY, sphere_checkers);
     let sphere_material = Material::builder().pattern(sphere_texture.into()).build();
-    let sphere_affine = translate(0.0, 1.0, 0.0);
+    let sphere_affine = translate(-2.0, 1.0, 0.0);
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
     let plane_checkers = UvCheckers {
@@ -38,6 +39,21 @@ pub fn scene2() -> Scene {
     let plane_material = Material::builder().pattern(plane_texture.into()).build();
     let plane = Plane::new(&Affine3A::IDENTITY, plane_material.id);
 
+    let cylinder_checkers = UvCheckers {
+        width: 16,
+        height: 8,
+        a: Color::SNOW,
+        b: Color::DARK_SLATE_GRAY,
+    };
+    let cylinder_texture = CylindricalTexture::new(cylinder_checkers);
+    let cylinder_material = Material::builder().pattern(cylinder_texture.into()).build();
+    let cylinder = Cylinder::new(
+        &translate(2.0, 0.0, 0.0),
+        cylinder_material.id,
+        (0.0, 2.0),
+        true,
+    );
+
     let l1 = Light {
         position: glam::vec3a(-10.0, 10.0, -10.0),
         intensity: Color::WHITE * 0.7,
@@ -47,14 +63,14 @@ pub fn scene2() -> Scene {
         intensity: Color::WHITE * 0.5,
     };
 
-    let materials = vec![sphere_material, plane_material];
-    let shapes = vec![sphere.into(), plane.into()];
+    let materials = vec![sphere_material, plane_material, cylinder_material];
+    let shapes = vec![sphere.into(), plane.into(), cylinder.into()];
     let lights = vec![l1, l2];
     let area_lights = vec![];
 
     let camera_view = Affine3A::look_at_rh(
-        glam::vec3(0.0, 4.0, -4.0),
-        glam::vec3(0.0, 1.0, 0.0),
+        glam::vec3(0.0, 4.0, -6.0),
+        glam::vec3(0.0, 1.5, 0.0),
         Vec3::Y,
     );
     let camera = Camera::new(1280, 720, std::f32::consts::PI / 3.0, camera_view);

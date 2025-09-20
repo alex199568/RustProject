@@ -183,6 +183,35 @@ impl LocalPattern for PlanarTexture {
     }
 }
 
+pub struct CylindricalTexture {
+    common: PatternCommon,
+    uv_pattern: UvCheckers,
+}
+
+impl CylindricalTexture {
+    pub fn new(uv_pattern: UvCheckers) -> Self {
+        Self {
+            common: PatternCommon::new(&Affine3A::IDENTITY),
+            uv_pattern: uv_pattern,
+        }
+    }
+
+    fn map_point(point: Vec3A) -> Vec2 {
+        let theta = libm::atan2f(point.x, point.z);
+        let raw_u = theta / (2.0 * std::f32::consts::PI);
+        let u = 1.0 - (raw_u + 0.5);
+        let v = point.y.fract();
+        glam::vec2(u, v)
+    }
+}
+
+impl LocalPattern for CylindricalTexture {
+    fn local_at(&self, point: Vec3A) -> Color {
+        let uv = Self::map_point(point);
+        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+    }
+}
+
 pub enum Pattern {
     Stripes(Stripes),
     Gradient(Gradient),
@@ -190,6 +219,7 @@ pub enum Pattern {
     Checkers(Checkers),
     SphericalTexture(SphericalTexture),
     PlanarTexture(PlanarTexture),
+    CylindricalTexture(CylindricalTexture),
 }
 
 impl Pattern {
@@ -201,6 +231,7 @@ impl Pattern {
             Pattern::Checkers(c) => c.common.at(c, point),
             Pattern::SphericalTexture(st) => st.common.at(st, point),
             Pattern::PlanarTexture(pt) => pt.common.at(pt, point),
+            Pattern::CylindricalTexture(ct) => ct.common.at(ct, point),
         }
     }
 }
@@ -238,6 +269,12 @@ impl From<SphericalTexture> for Pattern {
 impl From<PlanarTexture> for Pattern {
     fn from(t: PlanarTexture) -> Self {
         Pattern::PlanarTexture(t)
+    }
+}
+
+impl From<CylindricalTexture> for Pattern {
+    fn from(t: CylindricalTexture) -> Self {
+        Pattern::CylindricalTexture(t)
     }
 }
 
