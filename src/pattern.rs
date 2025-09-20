@@ -129,7 +129,7 @@ impl LocalPattern for Checkers {
 
 pub struct SphericalTexture {
     common: PatternCommon,
-    uv_pattern: UvCheckers,
+    uv_pattern: UvPattern,
 }
 
 impl SphericalTexture {
@@ -143,9 +143,9 @@ impl SphericalTexture {
         glam::vec2(u, v)
     }
 
-    pub fn new(transform: &Affine3A, uv_pattern: UvCheckers) -> Self {
+    pub fn new(uv_pattern: UvPattern) -> Self {
         Self {
-            common: PatternCommon::new(transform),
+            common: PatternCommon::new(&Affine3A::IDENTITY),
             uv_pattern: uv_pattern,
         }
     }
@@ -153,18 +153,17 @@ impl SphericalTexture {
 
 impl LocalPattern for SphericalTexture {
     fn local_at(&self, point: Vec3A) -> Color {
-        let uv = Self::map_point(point);
-        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+        self.uv_pattern.uv_pattern_at(Self::map_point(point))
     }
 }
 
 pub struct PlanarTexture {
     common: PatternCommon,
-    uv_pattern: UvCheckers,
+    uv_pattern: UvPattern,
 }
 
 impl PlanarTexture {
-    pub fn new(uv_pattern: UvCheckers) -> Self {
+    pub fn new(uv_pattern: UvPattern) -> Self {
         Self {
             common: PatternCommon::new(&Affine3A::IDENTITY),
             uv_pattern: uv_pattern,
@@ -178,18 +177,17 @@ impl PlanarTexture {
 
 impl LocalPattern for PlanarTexture {
     fn local_at(&self, point: Vec3A) -> Color {
-        let uv = Self::map_point(point);
-        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+        self.uv_pattern.uv_pattern_at(Self::map_point(point))
     }
 }
 
 pub struct CylindricalTexture {
     common: PatternCommon,
-    uv_pattern: UvCheckers,
+    uv_pattern: UvPattern,
 }
 
 impl CylindricalTexture {
-    pub fn new(uv_pattern: UvCheckers) -> Self {
+    pub fn new(uv_pattern: UvPattern) -> Self {
         Self {
             common: PatternCommon::new(&Affine3A::IDENTITY),
             uv_pattern: uv_pattern,
@@ -207,8 +205,7 @@ impl CylindricalTexture {
 
 impl LocalPattern for CylindricalTexture {
     fn local_at(&self, point: Vec3A) -> Color {
-        let uv = Self::map_point(point);
-        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+        self.uv_pattern.uv_pattern_at(Self::map_point(point))
     }
 }
 
@@ -286,13 +283,71 @@ pub struct UvCheckers {
 }
 
 impl UvCheckers {
-    pub fn uv_pattern_at(&self, u: f32, v: f32) -> Color {
-        let u2 = (u * self.width as f32).floor();
-        let v2 = (v * self.height as f32).floor();
+    pub fn uv_pattern_at(&self, uv: Vec2) -> Color {
+        let u2 = (uv.x * self.width as f32).floor();
+        let v2 = (uv.y * self.height as f32).floor();
         if (u2 + v2) as i32 % 2 == 0 {
             self.a
         } else {
             self.b
         }
+    }
+}
+
+pub struct AlignCheck {
+    pub main: Color,
+    pub ul: Color,
+    pub ur: Color,
+    pub bl: Color,
+    pub br: Color,
+}
+
+impl AlignCheck {
+    pub fn uv_pattern_at(&self, uv: Vec2) -> Color {
+        let u = uv.x.abs();
+        let v = uv.y.abs();
+        if v > 0.8 {
+            if u < 0.2 {
+                return self.ul;
+            }
+            if u > 0.8 {
+                return self.ur;
+            }
+        }
+        if v < 0.2 {
+            if u < 0.2 {
+                return self.bl;
+            }
+            if u > 0.8 {
+                return self.br;
+            }
+        }
+        self.main
+    }
+}
+
+pub enum UvPattern {
+    Checkers(UvCheckers),
+    AlignCheck(AlignCheck),
+}
+
+impl UvPattern {
+    pub fn uv_pattern_at(&self, uv: Vec2) -> Color {
+        match self {
+            UvPattern::Checkers(c) => c.uv_pattern_at(uv),
+            UvPattern::AlignCheck(ac) => ac.uv_pattern_at(uv),
+        }
+    }
+}
+
+impl From<UvCheckers> for UvPattern {
+    fn from(c: UvCheckers) -> Self {
+        UvPattern::Checkers(c)
+    }
+}
+
+impl From<AlignCheck> for UvPattern {
+    fn from(ac: AlignCheck) -> Self {
+        UvPattern::AlignCheck(ac)
     }
 }

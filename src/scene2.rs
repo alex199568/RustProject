@@ -12,8 +12,8 @@ use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{
-    Checkers, CylindricalTexture, Gradient, PlanarTexture, Rings, SphericalTexture, Stripes,
-    UvCheckers,
+    AlignCheck, Checkers, CylindricalTexture, Gradient, PlanarTexture, Rings, SphericalTexture,
+    Stripes, UvCheckers,
 };
 use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
@@ -24,18 +24,19 @@ pub fn scene2() -> Scene {
         a: Color::SNOW,
         b: Color::DARK_SLATE_GRAY,
     };
-    let sphere_texture = SphericalTexture::new(&Affine3A::IDENTITY, sphere_checkers);
+    let sphere_texture = SphericalTexture::new(sphere_checkers.into());
     let sphere_material = Material::builder().pattern(sphere_texture.into()).build();
     let sphere_affine = translate(-2.0, 1.0, 0.0);
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
-    let plane_checkers = UvCheckers {
-        width: 2,
-        height: 2,
-        a: Color::SNOW,
-        b: Color::DARK_SLATE_GRAY,
+    let plane_pattern = AlignCheck {
+        main: Color::GOLD,
+        ul: Color::INDIAN_RED,
+        ur: Color::STEEL_BLUE,
+        bl: Color::VIOLET,
+        br: Color::FOREST_GREEN,
     };
-    let plane_texture = PlanarTexture::new(plane_checkers);
+    let plane_texture = PlanarTexture::new(plane_pattern.into());
     let plane_material = Material::builder().pattern(plane_texture.into()).build();
     let plane = Plane::new(&Affine3A::IDENTITY, plane_material.id);
 
@@ -45,7 +46,7 @@ pub fn scene2() -> Scene {
         a: Color::SNOW,
         b: Color::DARK_SLATE_GRAY,
     };
-    let cylinder_texture = CylindricalTexture::new(cylinder_checkers);
+    let cylinder_texture = CylindricalTexture::new(cylinder_checkers.into());
     let cylinder_material = Material::builder().pattern(cylinder_texture.into()).build();
     let cylinder = Cylinder::new(
         &translate(2.0, 0.0, 0.0),
