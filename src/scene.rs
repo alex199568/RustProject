@@ -1,11 +1,11 @@
 use crate::Light;
 use crate::camera::Camera;
-use crate::color;
 use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
 use crate::material::Material;
+use crate::pattern::Pattern;
 use crate::ray::Ray;
 use crate::shape::Shape;
 
@@ -58,18 +58,49 @@ impl Scene {
         transittance
     }
 
+    fn resolve_material_color(
+        &self,
+        shape: &Shape,
+        material: &Material,
+        hit_point: Vec3A,
+    ) -> Color {
+        match &material.pattern {
+            Some(p) => {
+                let mut parent_id = shape.parent_id();
+                let mut point = shape.transform_point(hit_point);
+                while parent_id.is_some() {
+                    let parent_shape = self.find_shape_by_id(parent_id.unwrap());
+                    point = parent_shape.transform_point(point);
+                    parent_id = parent_shape.parent_id();
+                }
+
+                if let Shape::Triangle(t) = shape {
+                    if let Pattern::PlanarTexture(pt) = p {
+                        let uv = t.local_uv(point);
+                        pt.uv_pattern.uv_pattern_at(uv)
+                    } else {
+                        material.color
+                    }
+                } else {
+                    p.at(point)
+                }
+            }
+            None => material.color,
+        }
+    }
+
     fn shade(
         &self,
         hit: &Hit,
-        shape: &Shape,
         material: &Material,
+        material_color: Color,
         buffer: &mut IntersectionBuffer,
     ) -> Color {
         let mut surface = Color::new(0.0, 0.0, 0.0);
 
         for light in &self.lights {
             let intensity = self.shadow(light.position, hit.shape_id, hit.over_point, buffer);
-            let c = light.shade(shape, material, hit, self) * intensity;
+            let c = light.shade(material, material_color, hit) * intensity;
             surface += c;
         }
 
@@ -157,9 +188,10 @@ impl Scene {
             let m = self.find_material_by_id(shape.material_id());
 
             let h = Hit::new(shape, hit, &ray, self);
+            let m_color = self.resolve_material_color(shape, m, h.point);
 
             // --- local lighting (non-transmitted part) ---
-            let local = self.shade(&h, shape, m, buf);
+            let local = self.shade(&h, m, m_color, buf);
 
             let refl = m.reflection.clamp(0.0, 1.0); // scalar 0..1
             let transp = m.transparency.clamp(0.0, 1.0); // scalar 0..1

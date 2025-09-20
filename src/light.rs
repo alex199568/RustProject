@@ -1,9 +1,6 @@
 use crate::color::Color;
 use crate::intersection::Hit;
 use crate::material::Material;
-use crate::pattern::Pattern;
-use crate::scene::Scene;
-use crate::shape::Shape;
 
 use glam::Vec3A;
 
@@ -12,34 +9,8 @@ pub struct Light {
     pub intensity: Color,
 }
 
-// TODO: refactor Lights, make it accept material color
-
 impl Light {
-    pub fn shade(&self, shape: &Shape, material: &Material, hit: &Hit, scene: &Scene) -> Color {
-        let material_color = match &material.pattern {
-            Some(p) => {
-                let mut parent_id = shape.parent_id();
-                let mut point = shape.transform_point(hit.point);
-                while parent_id.is_some() {
-                    let parent_shape = scene.find_shape_by_id(parent_id.unwrap());
-                    point = parent_shape.transform_point(point);
-                    parent_id = parent_shape.parent_id();
-                }
-
-                if let Shape::Triangle(t) = shape {
-                    if let Pattern::PlanarTexture(pt) = p {
-                        let uv = t.local_uv(point);
-                        pt.uv_pattern.uv_pattern_at(uv)
-                    } else {
-                        material.color
-                    }
-                } else {
-                    p.at(point)
-                }
-            }
-            None => material.color,
-        };
-
+    pub fn shade(&self, material: &Material, material_color: Color, hit: &Hit) -> Color {
         let effective_color = material_color * self.intensity;
 
         let light_v = (self.position - hit.point).normalize();
