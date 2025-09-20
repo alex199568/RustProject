@@ -1,4 +1,5 @@
 use crate::Light;
+use crate::camera::Camera;
 use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
@@ -11,27 +12,14 @@ use crate::shape::Shape;
 use glam::Vec3A;
 
 pub struct Scene {
-    materials: Vec<Material>,
-    shapes: Vec<Shape>,
-    lights: Vec<Light>,
-    area_lights: Vec<AreaLight>,
+    pub materials: Vec<Material>,
+    pub shapes: Vec<Shape>,
+    pub lights: Vec<Light>,
+    pub area_lights: Vec<AreaLight>,
+    pub camera: Camera,
 }
 
 impl Scene {
-    pub fn new(
-        materials: Vec<Material>,
-        shapes: Vec<Shape>,
-        lights: Vec<Light>,
-        area_lights: Vec<AreaLight>,
-    ) -> Self {
-        Self {
-            materials: materials,
-            shapes: shapes,
-            lights: lights,
-            area_lights: area_lights,
-        }
-    }
-
     fn intersect(&self, ray: &Ray, intersections: &mut IntersectionBuffer) {
         intersections.clear();
         for shape in self.shapes.iter() {
