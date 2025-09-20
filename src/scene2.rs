@@ -11,13 +11,19 @@ use crate::color::Color;
 use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
-use crate::pattern::{Checkers, Gradient, Rings, Stripes};
+use crate::pattern::{Checkers, Gradient, Rings, SphericalMapper, Stripes, Texture, UvCheckers};
 use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
 
 pub fn scene2() -> Scene {
-    let checkers_affine = scale(0.3, 0.3, 0.3);
-    let checkers = Checkers::new(&checkers_affine, Color::SNOW, Color::DARK_SLATE_GRAY);
-    let checkers_material = Material::builder().pattern(checkers.into()).build();
+    let uv_checkers = UvCheckers {
+        width: 8,
+        height: 4,
+        a: Color::SNOW,
+        b: Color::DARK_SLATE_GRAY,
+    };
+    let spherical_mapper = SphericalMapper {};
+    let texture = Texture::new(&Affine3A::IDENTITY, uv_checkers, spherical_mapper);
+    let checkers_material = Material::builder().pattern(texture.into()).build();
 
     let sphere_affine = rotate_yd(45.0);
     let sphere = Sphere::new(&sphere_affine, checkers_material.id);

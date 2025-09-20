@@ -1,6 +1,7 @@
 use crate::color::Color;
 
 use glam::Affine3A;
+use glam::Vec2;
 use glam::Vec3A;
 
 use std::convert::From;
@@ -126,11 +127,35 @@ impl LocalPattern for Checkers {
     }
 }
 
+pub struct Texture {
+    common: PatternCommon,
+    uv_pattern: UvCheckers,
+    uv_mapper: SphericalMapper,
+}
+
+impl Texture {
+    pub fn new(transform: &Affine3A, uv_pattern: UvCheckers, uv_mapper: SphericalMapper) -> Self {
+        Self {
+            common: PatternCommon::new(transform),
+            uv_pattern: uv_pattern,
+            uv_mapper: uv_mapper,
+        }
+    }
+}
+
+impl LocalPattern for Texture {
+    fn local_at(&self, point: Vec3A) -> Color {
+        let uv = self.uv_mapper.map_point(point);
+        self.uv_pattern.uv_pattern_at(uv.x, uv.y)
+    }
+}
+
 pub enum Pattern {
     Stripes(Stripes),
     Gradient(Gradient),
     Rings(Rings),
     Checkers(Checkers),
+    Texture(Texture),
 }
 
 impl Pattern {
@@ -140,6 +165,7 @@ impl Pattern {
             Pattern::Gradient(g) => g.common.at(g, point),
             Pattern::Rings(r) => r.common.at(r, point),
             Pattern::Checkers(c) => c.common.at(c, point),
+            Pattern::Texture(t) => t.common.at(t, point),
         }
     }
 }
@@ -165,5 +191,44 @@ impl From<Rings> for Pattern {
 impl From<Checkers> for Pattern {
     fn from(c: Checkers) -> Self {
         Pattern::Checkers(c)
+    }
+}
+
+impl From<Texture> for Pattern {
+    fn from(t: Texture) -> Self {
+        Pattern::Texture(t)
+    }
+}
+
+pub struct UvCheckers {
+    pub width: usize,
+    pub height: usize,
+    pub a: Color,
+    pub b: Color,
+}
+
+impl UvCheckers {
+    pub fn uv_pattern_at(&self, u: f32, v: f32) -> Color {
+        let u2 = (u * self.width as f32).floor();
+        let v2 = (v * self.height as f32).floor();
+        if (u2 + v2) as i32 % 2 == 0 {
+            self.a
+        } else {
+            self.b
+        }
+    }
+}
+
+pub struct SphericalMapper {}
+
+impl SphericalMapper {
+    pub fn map_point(&self, p: Vec3A) -> Vec2 {
+        let theta = libm::atan2f(p.x, p.z);
+        let r = p.length();
+        let phi = libm::acosf(p.y / r);
+        let raw_u = theta / (std::f32::consts::PI * 2.0);
+        let u = 1.0 - (raw_u + 0.5);
+        let v = 1.0 - phi / std::f32::consts::PI;
+        glam::vec2(u, v)
     }
 }
