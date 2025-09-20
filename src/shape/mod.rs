@@ -7,6 +7,7 @@ mod group;
 mod plane;
 mod shape;
 mod sphere;
+mod torus;
 mod triangle;
 
 pub use cone::Cone;
@@ -17,4 +18,5 @@ pub use group::Group;
 pub use plane::Plane;
 pub use shape::Shape;
 pub use sphere::Sphere;
+pub use torus::Torus;
 pub use triangle::Triangle;

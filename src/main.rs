@@ -20,5 +20,5 @@ use crate::light::Light;
 fn main() {
     let scene = scene2::scene2();
 
-    render::render(&scene, "renders/uv/image1.png");
+    render::render(&scene, "renders/torus.png");
 }

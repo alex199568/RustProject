@@ -7,6 +7,8 @@ use glam::Vec3A;
 
 use std::convert::From;
 
+// TODO: split into separate files
+
 struct PatternCommon {
     inv: Affine3A,
 }

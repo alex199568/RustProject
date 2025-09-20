@@ -5,7 +5,7 @@ use glam::Vec3;
 
 use crate::img::Img;
 use crate::robj::load_obj;
-use crate::transform::{rotate_yd, scale, translate};
+use crate::transform::{rotate_xd, rotate_yd, rotate_zd, scale, translate};
 
 use crate::camera::Camera;
 use crate::color::Color;
@@ -15,7 +15,7 @@ use crate::pattern::{
     AlignCheck, Checkers, CubeTexture, CylindricalTexture, Gradient, PlanarTexture, Rings, Skybox,
     SphericalTexture, Stripes, UvCheckers, UvImage,
 };
-use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere};
+use crate::shape::{Cone, Csg, Cube, Cylinder, Group, Plane, Shape, Sphere, Torus};
 
 pub fn scene2() -> Scene {
     let sphere_checkers = UvCheckers {
@@ -28,7 +28,7 @@ pub fn scene2() -> Scene {
     let sphere_material = Material::builder()
         .pattern(Some(sphere_texture.into()))
         .build();
-    let sphere_affine = translate(-4.0, 1.0, 0.0);
+    let sphere_affine = translate(-5.0, 1.0, -1.0);
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
     let plane_pattern = AlignCheck {
@@ -84,7 +84,7 @@ pub fn scene2() -> Scene {
     let earth_material = Material::builder()
         .pattern(Some(earth_texture.into()))
         .build();
-    let earth_affine = translate(-3.0, 1.0, 3.0) * rotate_yd(45.0);
+    let earth_affine = translate(-2.0, 1.0, 4.0) * rotate_yd(45.0);
     let earth = Sphere::new(&earth_affine, earth_material.id);
 
     let backimg = Img::load("assets/images/skybox/back.png").unwrap();
@@ -111,8 +111,12 @@ pub fn scene2() -> Scene {
     let skybox_affine = scale(1_000.0, 1_000.0, 1_000.0);
     let skybox = Cube::new(&skybox_affine, skybox_material.id);
 
-    let car_affine = rotate_yd(130.0);
+    let car_affine = translate(-4.0, 0.0, 3.0) * rotate_yd(130.0);
     let (car_materials, car) = load_obj("assets/models/Car.obj", &car_affine);
+
+    let torus_affine = translate(0.0, 1.2, 0.0) * rotate_yd(30.0) * rotate_xd(90.0);
+    let torus_material = Material::builder().color(Color::ALICE_BLUE).build();
+    let torus = Torus::new(&torus_affine, torus_material.id, 1.0, 0.2);
 
     let l1 = Light {
         position: glam::vec3a(-10.0, 10.0, -10.0),
@@ -130,6 +134,7 @@ pub fn scene2() -> Scene {
         cube_material,
         earth_material,
         skybox_material,
+        torus_material,
     ];
     materials.extend(car_materials);
 
@@ -141,6 +146,7 @@ pub fn scene2() -> Scene {
         earth.into(),
         skybox.into(),
         car,
+        torus.into(),
     ];
     let lights = vec![l1, l2];
 

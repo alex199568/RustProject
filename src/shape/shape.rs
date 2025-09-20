@@ -12,6 +12,7 @@ use crate::shape::cylinder::Cylinder;
 use crate::shape::group::Group;
 use crate::shape::plane::Plane;
 use crate::shape::sphere::Sphere;
+use crate::shape::torus::Torus;
 use crate::shape::triangle::Triangle;
 
 use glam::Affine3A;
@@ -93,6 +94,7 @@ pub enum Shape {
     Triangle(Triangle),
     Group(Group),
     Csg(Csg),
+    Torus(Torus),
 }
 
 impl Shape {
@@ -106,6 +108,7 @@ impl Shape {
             Shape::Triangle(t) => &t.common,
             Shape::Group(g) => &g.common,
             Shape::Csg(c) => &c.common,
+            Shape::Torus(t) => &t.common,
         }
     }
 
@@ -119,6 +122,7 @@ impl Shape {
             Shape::Triangle(t) => t.common.aabb.clone(),
             Shape::Group(g) => &g.common.aabb * &g.transform.tr,
             Shape::Csg(c) => &c.common.aabb * &c.transform.tr,
+            Shape::Torus(t) => &t.common.aabb * &t.transform.tr,
         }
     }
 
@@ -132,6 +136,7 @@ impl Shape {
             Shape::Triangle(t) => &mut t.common,
             Shape::Group(g) => &mut g.common,
             Shape::Csg(g) => &mut g.common,
+            Shape::Torus(t) => &mut t.common,
         }
     }
 
@@ -145,6 +150,7 @@ impl Shape {
             Shape::Triangle(t) => t.local_intersect(ray, buffer),
             Shape::Group(g) => g.common.intersect(&g.transform, g, ray, buffer),
             Shape::Csg(c) => c.common.intersect(&c.transform, c, ray, buffer),
+            Shape::Torus(t) => t.common.intersect(&t.transform, t, ray, buffer),
         }
     }
 
@@ -166,6 +172,7 @@ impl Shape {
             Shape::Triangle(t) => t.local_normal(p, intersection),
             Shape::Group(g) => g.common.normal(&g.transform, g, p, intersection),
             Shape::Csg(c) => c.common.normal(&c.transform, c, p, intersection),
+            Shape::Torus(t) => t.common.normal(&t.transform, t, p, intersection),
         };
 
         parent_id = self.common().parent_id;
@@ -189,6 +196,7 @@ impl Shape {
             Shape::Triangle(t) => t.material_id,
             Shape::Group(_) => panic!("Trying to get group material"),
             Shape::Csg(_) => panic!("Trying to get csg material"),
+            Shape::Torus(t) => t.material_id,
         }
     }
 
@@ -202,6 +210,7 @@ impl Shape {
             Shape::Triangle(_) => point,
             Shape::Group(g) => g.transform.inv.transform_point3a(point),
             Shape::Csg(c) => c.transform.inv.transform_point3a(point),
+            Shape::Torus(t) => t.transform.inv.transform_point3a(point),
         }
     }
 
@@ -215,6 +224,7 @@ impl Shape {
             Shape::Triangle(_) => normal,
             Shape::Group(g) => g.transform.inv_tr * normal,
             Shape::Csg(c) => c.transform.inv_tr * normal,
+            Shape::Torus(t) => t.transform.inv_tr * normal,
         }
     }
 
@@ -228,6 +238,7 @@ impl Shape {
             Shape::Triangle(_) => 1,
             Shape::Group(g) => g.children.iter().map(|c| c.max_intersections()).sum(),
             Shape::Csg(c) => c.left.max_intersections() + c.right.max_intersections(),
+            Shape::Torus(_) => 4,
         }
     }
 
