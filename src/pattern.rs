@@ -278,22 +278,8 @@ impl CubeFace {
             CubeFace::Top => Self::top(point),
         }
     }
-}
 
-pub struct CubeTexture {
-    common: PatternCommon,
-    uv_pattern: UvPattern,
-}
-
-impl CubeTexture {
-    pub fn new(uv_pattern: UvPattern) -> Self {
-        CubeTexture {
-            common: PatternCommon::new(&Affine3A::IDENTITY),
-            uv_pattern: uv_pattern,
-        }
-    }
-
-    fn face_for(point: Vec3A) -> CubeFace {
+    fn from_point(point: Vec3A) -> CubeFace {
         let x = point.x.abs();
         let y = point.y.abs();
         let z = point.z.abs();
@@ -315,13 +301,74 @@ impl CubeTexture {
     }
 
     fn map_point(point: Vec3A) -> Vec2 {
-        Self::face_for(point).uv_at(point)
+        CubeFace::from_point(point).uv_at(point)
+    }
+}
+
+pub struct CubeTexture {
+    common: PatternCommon,
+    uv_pattern: UvPattern,
+}
+
+impl CubeTexture {
+    pub fn new(uv_pattern: UvPattern) -> Self {
+        CubeTexture {
+            common: PatternCommon::new(&Affine3A::IDENTITY),
+            uv_pattern: uv_pattern,
+        }
     }
 }
 
 impl LocalPattern for CubeTexture {
     fn local_at(&self, point: Vec3A) -> Color {
-        self.uv_pattern.uv_pattern_at(Self::map_point(point))
+        self.uv_pattern.uv_pattern_at(CubeFace::map_point(point))
+    }
+}
+
+pub struct Skybox {
+    common: PatternCommon,
+    left: UvImage,
+    right: UvImage,
+    back: UvImage,
+    front: UvImage,
+    bottom: UvImage,
+    top: UvImage,
+}
+
+impl Skybox {
+    pub fn new(
+        left: UvImage,
+        right: UvImage,
+        back: UvImage,
+        front: UvImage,
+        bottom: UvImage,
+        top: UvImage,
+    ) -> Self {
+        Self {
+            common: PatternCommon::new(&Affine3A::IDENTITY),
+            left: left,
+            right: right,
+            back: back,
+            front: front,
+            bottom: bottom,
+            top: top,
+        }
+    }
+}
+
+impl LocalPattern for Skybox {
+    fn local_at(&self, point: Vec3A) -> Color {
+        let face = CubeFace::from_point(point);
+        let uv = CubeFace::map_point(point);
+
+        match face {
+            CubeFace::Left => self.left.uv_pattern_at(uv),
+            CubeFace::Right => self.right.uv_pattern_at(uv),
+            CubeFace::Back => self.back.uv_pattern_at(uv),
+            CubeFace::Front => self.front.uv_pattern_at(uv),
+            CubeFace::Bottom => self.bottom.uv_pattern_at(uv),
+            CubeFace::Top => self.top.uv_pattern_at(uv),
+        }
     }
 }
 
@@ -334,6 +381,7 @@ pub enum Pattern {
     PlanarTexture(PlanarTexture),
     CylindricalTexture(CylindricalTexture),
     CubeTexture(CubeTexture),
+    Skybox(Skybox),
 }
 
 impl Pattern {
@@ -347,6 +395,7 @@ impl Pattern {
             Pattern::PlanarTexture(pt) => pt.common.at(pt, point),
             Pattern::CylindricalTexture(ct) => ct.common.at(ct, point),
             Pattern::CubeTexture(ct) => ct.common.at(ct, point),
+            Pattern::Skybox(s) => s.common.at(s, point),
         }
     }
 }
@@ -396,6 +445,12 @@ impl From<CylindricalTexture> for Pattern {
 impl From<CubeTexture> for Pattern {
     fn from(ct: CubeTexture) -> Self {
         Pattern::CubeTexture(ct)
+    }
+}
+
+impl From<Skybox> for Pattern {
+    fn from(s: Skybox) -> Self {
+        Pattern::Skybox(s)
     }
 }
 
