@@ -16,9 +16,9 @@ pub struct Triangle {
     n1: Vec3A,
     n2: Vec3A,
     n3: Vec3A,
-    _uv1: Vec2,
-    _uv2: Vec2,
-    _uv3: Vec2,
+    uv1: Vec2,
+    uv2: Vec2,
+    uv3: Vec2,
 }
 
 impl Triangle {
@@ -51,10 +51,33 @@ impl Triangle {
             n1: n,
             n2: n2.unwrap_or(n),
             n3: n3.unwrap_or(n),
-            _uv1: uv1.unwrap_or(Vec2::ZERO),
-            _uv2: uv2.unwrap_or(Vec2::ZERO),
-            _uv3: uv3.unwrap_or(Vec2::ZERO),
+            uv1: uv1.unwrap_or(Vec2::ZERO),
+            uv2: uv2.unwrap_or(Vec2::ZERO),
+            uv3: uv3.unwrap_or(Vec2::ZERO),
         }
+    }
+
+    pub fn local_uv(&self, point: Vec3A) -> Vec2 {
+        let v0 = self.e1;
+        let v1 = self.e2;
+        let v2 = point - self.p1;
+
+        let d00 = v0.dot(v0);
+        let d01 = v0.dot(v1);
+        let d11 = v1.dot(v1);
+        let d20 = v2.dot(v0);
+        let d21 = v2.dot(v1);
+
+        let denom = d00 * d11 - d01 * d01;
+        if denom == 0.0 {
+            return self.uv1;
+        }
+
+        let v = (d20 * d11 - d21 * d01) / denom;
+        let w = (d21 * d00 - d20 * d01) / denom;
+        let u = 1.0 - v - w;
+
+        self.uv1 * u + self.uv2 * v + self.uv3 * w
     }
 }
 

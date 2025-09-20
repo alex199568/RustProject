@@ -37,27 +37,17 @@ impl Color {
     #[inline]
     pub fn srgb8(self) -> [u8; 3] {
         fn enc(x: f32) -> u8 {
-            let y = x.clamp(0.0, 1.0);
-            (y * 255.0) as u8
+            (x.clamp(0.0, 1.0) * 255.0) as u8
         }
         [enc(self.r), enc(self.g), enc(self.b)]
     }
 
     #[inline]
-    pub fn from_srgb8(r: u8, g: u8, b: u8) -> Self {
-        fn srgb_to_linear(c: u8) -> f32 {
-            let c = c as f32 / 255.0;
-            if c <= 0.04045 {
-                c / 12.92
-            } else {
-                ((c + 0.055) / 1.055).powf(2.4)
-            }
-        }
-
+    pub fn from_rgb8(r: u8, g: u8, b: u8) -> Self {
         Self {
-            r: srgb_to_linear(r),
-            g: srgb_to_linear(g),
-            b: srgb_to_linear(b),
+            r: r as f32 / 255.0,
+            g: g as f32 / 255.0,
+            b: b as f32 / 255.0,
         }
     }
 

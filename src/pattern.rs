@@ -159,8 +159,8 @@ impl LocalPattern for SphericalTexture {
 }
 
 pub struct PlanarTexture {
-    common: PatternCommon,
-    uv_pattern: UvPattern,
+    pub common: PatternCommon,
+    pub uv_pattern: UvPattern,
 }
 
 impl PlanarTexture {

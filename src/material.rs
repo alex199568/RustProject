@@ -25,7 +25,7 @@ pub struct Material {
     pub specular: f32,
     #[builder(default = 200.0)]
     pub shininess: f32,
-    #[builder(default = None, setter(strip_option))]
+    #[builder(default = None)]
     pub pattern: Option<Pattern>,
     #[builder(default = 0.0)]
     pub reflection: f32,

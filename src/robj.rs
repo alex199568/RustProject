@@ -1,5 +1,7 @@
 use crate::color::Color;
+use crate::img::Img;
 use crate::material::Material;
+use crate::pattern::{PlanarTexture, UvImage};
 use crate::shape::{Group, Shape, Triangle};
 
 use glam::Affine3A;
@@ -7,7 +9,16 @@ use glam::Vec2;
 
 use std::path::Path;
 
-fn to_material(obj_mat: &tobj::Material) -> Material {
+fn to_material(obj_mat: &tobj::Material, obj_dir: &Path) -> Material {
+    let texture = if let Some(dt) = obj_mat.diffuse_texture.as_ref() {
+        let tex_path = obj_dir.join(dt);
+        let img = Img::load(tex_path).unwrap();
+        let uv_image = UvImage::new(img, true);
+        Some(PlanarTexture::new(uv_image.into()).into())
+    } else {
+        None
+    };
+
     Material::builder()
         .color(Color::option(obj_mat.diffuse))
         // .diffuse(Color::option(obj_mat.diffuse).r)
@@ -16,15 +27,18 @@ fn to_material(obj_mat: &tobj::Material) -> Material {
         .refraction(obj_mat.optical_density.unwrap_or(1.0))
         .transparency(1.0 - obj_mat.dissolve.unwrap_or(1.0))
         .specular(Color::option(obj_mat.specular).r)
+        .pattern(texture)
         .build()
 }
 
 pub fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> (Vec<Material>, Shape) {
     let path_ref: &Path = file_path.as_ref();
+    let obj_dir = path_ref.parent().unwrap_or_else(|| Path::new("."));
     let (models, materials) = tobj::load_obj(
         path_ref,
         &tobj::LoadOptions {
             triangulate: true,
+            single_index: true,
             ..Default::default()
         },
     )
@@ -51,7 +65,7 @@ pub fn load_obj<P: AsRef<Path>>(file_path: P, tr: &Affine3A) -> (Vec<Material>, 
         let material = mesh
             .material_id
             .and_then(|i| mats.get(i))
-            .map(|m| to_material(m))
+            .map(|m| to_material(m, obj_dir))
             .unwrap_or_else(|| Material::builder().build());
         let material_id = material.id;
         materials.push(material);

@@ -57,6 +57,7 @@ impl IntersectionBuffer {
 
 pub struct Hit {
     pub shape_id: usize,
+    pub uv: Vec2,
     pub point: Vec3A,
     pub eye: Vec3A,
     pub normal: Vec3A,
@@ -81,6 +82,7 @@ impl Hit {
 
         Self {
             shape_id: intersection.shape_id,
+            uv: intersection.uv.unwrap_or(Vec2::ZERO),
             point: point,
             eye: eye,
             normal: normal,

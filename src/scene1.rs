@@ -54,23 +54,23 @@ pub fn scene1() -> Scene {
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let stripes = Stripes::new(&stripes_affine, Color::SNOW, Color::SILVER);
-    let stripes_material = Material::builder().pattern(stripes.into()).build();
+    let stripes_material = Material::builder().pattern(Some(stripes.into())).build();
     let stripes_id = stripes_material.id;
 
     let gradient_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
     let gradient = Gradient::new(&gradient_affine, Color::GAINSBORO, Color::SILVER);
-    let gradient_material = Material::builder().pattern(gradient.into()).build();
+    let gradient_material = Material::builder().pattern(Some(gradient.into())).build();
     let gradient_id = gradient_material.id;
 
     let rings_affine = Affine3A::IDENTITY;
     let rings = Rings::new(&rings_affine, Color::GOLD, Color::VIOLET);
-    let rings_material = Material::builder().pattern(rings.into()).build();
+    let rings_material = Material::builder().pattern(Some(rings.into())).build();
     let rings_id = rings_material.id;
 
     let checkers_affine = Affine3A::IDENTITY;
     let checkers = Checkers::new(&checkers_affine, Color::SNOW, Color::DARK_SLATE_GRAY);
     let checkers_material = Material::builder()
-        .pattern(checkers.into())
+        .pattern(Some(checkers.into()))
         .reflection(0.3)
         .build();
     let checkers_id = checkers_material.id;

@@ -55,7 +55,7 @@ impl Img {
         let mut colors = Vec::with_capacity((w * h) as usize);
         for p in rgb_img.pixels() {
             let [r, g, b] = p.0;
-            colors.push(Color::from_srgb8(r, g, b))
+            colors.push(Color::from_rgb8(r, g, b))
         }
 
         Ok(Img {

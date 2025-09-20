@@ -26,8 +26,10 @@ pub fn scene2() -> Scene {
         b: Color::DARK_SLATE_GRAY,
     };
     let sphere_texture = SphericalTexture::new(sphere_checkers.into());
-    let sphere_material = Material::builder().pattern(sphere_texture.into()).build();
-    let sphere_affine = translate(-3.0, 1.0, 0.0);
+    let sphere_material = Material::builder()
+        .pattern(Some(sphere_texture.into()))
+        .build();
+    let sphere_affine = translate(-4.0, 1.0, 0.0);
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
     let plane_pattern = AlignCheck {
@@ -39,7 +41,7 @@ pub fn scene2() -> Scene {
     };
     let plane_texture = PlanarTexture::new(plane_pattern.into());
     let plane_material = Material::builder()
-        .pattern(plane_texture.into())
+        .pattern(Some(plane_texture.into()))
         .reflection(0.2)
         .build();
     let plane = Plane::new(&Affine3A::IDENTITY, plane_material.id);
@@ -53,11 +55,11 @@ pub fn scene2() -> Scene {
     };
     let cube_texture = CubeTexture::new(cube_pattern.into());
     let cube_material = Material::builder()
-        .pattern(cube_texture.into())
+        .pattern(Some(cube_texture.into()))
         .transparency(0.2)
         .refraction(Material::IOR_VACUUM)
         .build();
-    let cube_affine = translate(0.0, 1.0, 3.0) * rotate_yd(15.0);
+    let cube_affine = translate(1.0, 1.0, 5.0) * rotate_yd(15.0);
     let cube = Cube::new(&cube_affine, cube_material.id);
 
     let cylinder_checkers = UvCheckers {
@@ -67,9 +69,11 @@ pub fn scene2() -> Scene {
         b: Color::DARK_SLATE_GRAY,
     };
     let cylinder_texture = CylindricalTexture::new(cylinder_checkers.into());
-    let cylinder_material = Material::builder().pattern(cylinder_texture.into()).build();
+    let cylinder_material = Material::builder()
+        .pattern(Some(cylinder_texture.into()))
+        .build();
     let cylinder = Cylinder::new(
-        &translate(3.0, 0.0, 0.0),
+        &translate(4.0, 0.0, 0.0),
         cylinder_material.id,
         (0.0, 2.0),
         true,
@@ -78,8 +82,10 @@ pub fn scene2() -> Scene {
     let earth_image = Img::load("assets/images/world-map.gif").unwrap();
     let uvimage = UvImage::new(earth_image, true);
     let earth_texture = SphericalTexture::new(uvimage.into());
-    let earth_material = Material::builder().pattern(earth_texture.into()).build();
-    let earth_affine = translate(0.0, 1.0, 0.0) * rotate_yd(45.0);
+    let earth_material = Material::builder()
+        .pattern(Some(earth_texture.into()))
+        .build();
+    let earth_affine = translate(-3.0, 1.0, 3.0) * rotate_yd(45.0);
     let earth = Sphere::new(&earth_affine, earth_material.id);
 
     let backimg = Img::load("assets/images/skybox/back.png").unwrap();
@@ -98,7 +104,7 @@ pub fn scene2() -> Scene {
 
     let skybox = Skybox::new(rightuv, leftuv, backuv, frontuv, bottomuv, topuv);
     let skybox_material = Material::builder()
-        .pattern(skybox.into())
+        .pattern(Some(skybox.into()))
         .ambient(1.0)
         .diffuse(0.0)
         .specular(0.0)
@@ -106,16 +112,19 @@ pub fn scene2() -> Scene {
     let skybox_affine = scale(1_000.0, 1_000.0, 1_000.0);
     let skybox = Cube::new(&skybox_affine, skybox_material.id);
 
+    let car_affine = rotate_yd(130.0);
+    let (car_materials, car) = load_obj("assets/models/Car.obj", &car_affine);
+
     let l1 = Light {
         position: glam::vec3a(-10.0, 10.0, -10.0),
-        intensity: Color::WHITE * 0.7,
+        intensity: Color::WHITE * 0.8,
     };
     let l2 = Light {
         position: glam::vec3a(10.0, 10.0, -10.0),
-        intensity: Color::WHITE * 0.5,
+        intensity: Color::WHITE * 0.6,
     };
 
-    let materials = vec![
+    let mut materials = vec![
         sphere_material,
         plane_material,
         cylinder_material,
@@ -123,6 +132,8 @@ pub fn scene2() -> Scene {
         earth_material,
         skybox_material,
     ];
+    materials.extend(car_materials);
+
     let shapes = vec![
         sphere.into(),
         plane.into(),
@@ -130,13 +141,14 @@ pub fn scene2() -> Scene {
         cube.into(),
         earth.into(),
         skybox.into(),
+        car,
     ];
     let lights = vec![l1, l2];
     let area_lights = vec![];
 
     let camera_view = Affine3A::look_at_rh(
-        glam::vec3(-6.0, 1.0, -12.0),
-        glam::vec3(0.0, 4.0, 0.0),
+        glam::vec3(0.0, 3.0, -12.0),
+        glam::vec3(0.0, 1.0, 0.0),
         Vec3::Y,
     );
     let camera = Camera::new(1280, 720, std::f32::consts::PI / 3.0, camera_view);

@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::intersection::Hit;
 use crate::material::Material;
+use crate::pattern::Pattern;
 use crate::scene::Scene;
 use crate::shape::Shape;
 
@@ -12,6 +13,8 @@ pub struct Light {
     pub position: Vec3A,
     pub intensity: Color,
 }
+
+// TODO: refactor Lights
 
 impl Light {
     pub fn shade(&self, shape: &Shape, material: &Material, hit: &Hit, scene: &Scene) -> Color {
@@ -25,7 +28,16 @@ impl Light {
                     parent_id = parent_shape.parent_id();
                 }
 
-                p.at(point)
+                if let Shape::Triangle(t) = shape {
+                    if let Pattern::PlanarTexture(pt) = p {
+                        let uv = t.local_uv(point);
+                        pt.uv_pattern.uv_pattern_at(uv)
+                    } else {
+                        material.color
+                    }
+                } else {
+                    p.at(point)
+                }
             }
             None => material.color,
         };
@@ -102,7 +114,16 @@ impl AreaLight {
                     parent_id = parent_shape.parent_id();
                 }
 
-                p.at(point)
+                if let Shape::Triangle(t) = shape {
+                    if let Pattern::PlanarTexture(pt) = p {
+                        let uv = t.local_uv(point);
+                        pt.uv_pattern.uv_pattern_at(uv)
+                    } else {
+                        material.color
+                    }
+                } else {
+                    p.at(point)
+                }
             }
             None => material.color,
         };
