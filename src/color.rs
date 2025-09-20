@@ -8,30 +8,46 @@ use std::ops::Sub;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use glam::Vec3A;
+
+//3285.359 ms
+//Rendering time: 3211.307 ms
+
 #[derive(Copy, Clone)]
-pub struct Color {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-}
+#[repr(transparent)]
+pub struct Color(pub Vec3A);
 
 impl Color {
     pub fn option(o: Option<[f32; 3]>) -> Self {
         match o {
-            Some(items) => Self {
-                r: items[0],
-                g: items[1],
-                b: items[2],
-            },
+            Some(items) => Self::new(items[0], items[1], items[2]),
             None => Gray::BLACK,
         }
+    }
+
+    #[inline]
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        Self(glam::vec3a(r, g, b))
     }
 
     const fn hex(value: i32) -> Self {
         let r = ((value >> 16) & 0xFF) as f32 / 255.0;
         let g = ((value >> 8) & 0xFF) as f32 / 255.0;
         let b = (value & 0xFF) as f32 / 255.0;
-        Self { r, g, b }
+        Self(glam::vec3a(r, g, b))
+    }
+
+    #[inline]
+    pub fn r(self) -> f32 {
+        self.0.x
+    }
+    #[inline]
+    pub fn g(self) -> f32 {
+        self.0.y
+    }
+    #[inline]
+    pub fn b(self) -> f32 {
+        self.0.z
     }
 
     #[inline]
@@ -39,106 +55,79 @@ impl Color {
         fn enc(x: f32) -> u8 {
             (x.clamp(0.0, 1.0) * 255.0) as u8
         }
-        [enc(self.r), enc(self.g), enc(self.b)]
+        [enc(self.r()), enc(self.g()), enc(self.b())]
     }
 
     #[inline]
     pub fn from_rgb8(r: u8, g: u8, b: u8) -> Self {
-        Self {
-            r: r as f32 / 255.0,
-            g: g as f32 / 255.0,
-            b: b as f32 / 255.0,
-        }
+        Self::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
     }
 }
 
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Color({}, {}, {})", self.r, self.g, self.b)
+        write!(f, "Color({}, {}, {})", self.r(), self.g(), self.b())
     }
 }
 
 impl Add for Color {
     type Output = Color;
-
+    #[inline]
     fn add(self, other: Color) -> Color {
-        Color {
-            r: self.r + other.r,
-            g: self.g + other.g,
-            b: self.b + other.b,
-        }
+        Color(self.0 + other.0)
     }
 }
 
 impl AddAssign for Color {
+    #[inline]
     fn add_assign(&mut self, rhs: Self) {
-        self.r += rhs.r;
-        self.g += rhs.g;
-        self.b += rhs.b;
+        self.0 += rhs.0
     }
 }
 
 impl Sub for Color {
     type Output = Color;
-
+    #[inline]
     fn sub(self, other: Color) -> Color {
-        Color {
-            r: self.r - other.r,
-            g: self.g - other.g,
-            b: self.b - other.b,
-        }
+        Color(self.0 - other.0)
     }
 }
 
 impl Mul for Color {
     type Output = Color;
-
+    #[inline]
     fn mul(self, other: Color) -> Color {
-        Color {
-            r: self.r * other.r,
-            g: self.g * other.g,
-            b: self.b * other.b,
-        }
+        Color(self.0 * other.0)
     }
 }
 
 impl MulAssign for Color {
+    #[inline]
     fn mul_assign(&mut self, rhs: Self) {
-        self.r *= rhs.r;
-        self.g *= rhs.g;
-        self.b *= rhs.b;
+        self.0 *= rhs.0
     }
 }
 
 impl MulAssign<f32> for Color {
+    #[inline]
     fn mul_assign(&mut self, rhs: f32) {
-        self.r *= rhs;
-        self.g *= rhs;
-        self.b *= rhs;
+        self.0 *= rhs
     }
 }
 
 impl Mul<f32> for Color {
     type Output = Color;
-
+    #[inline]
     fn mul(self, n: f32) -> Color {
-        Color {
-            r: self.r * n,
-            g: self.g * n,
-            b: self.b * n,
-        }
+        Color(self.0 * n)
     }
 }
 
 impl Div<f32> for Color {
     type Output = Color;
-
+    #[inline]
     fn div(self, n: f32) -> Color {
-        Color {
-            r: self.r / n,
-            g: self.g / n,
-            b: self.b / n,
-        }
+        Color(self.0 / n)
     }
 }
 
@@ -158,11 +147,7 @@ impl AddAssign<Color> for AccColor {
 impl AccColor {
     pub fn new() -> Self {
         Self {
-            color: Color {
-                r: 0.0,
-                g: 0.0,
-                b: 0.0,
-            },
+            color: Color::new(0.0, 0.0, 0.0),
             count: 0,
         }
     }

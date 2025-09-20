@@ -26,7 +26,7 @@ fn to_material(obj_mat: &tobj::Material, obj_dir: &Path) -> Material {
         .shininess(obj_mat.shininess.unwrap_or(0.0))
         .refraction(obj_mat.optical_density.unwrap_or(1.0))
         .transparency(1.0 - obj_mat.dissolve.unwrap_or(1.0))
-        .specular(Color::option(obj_mat.specular).r)
+        .specular(Color::option(obj_mat.specular).r())
         .pattern(texture)
         .build()
 }

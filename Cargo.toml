@@ -5,11 +5,13 @@ edition = "2024"
 
 [profile.release]
 opt-level = 3
-lto = "thin"          # link-time opt without huge build time
+lto = "fat"          # link-time opt without huge build time
 codegen-units = 1     # better inlining across crates
 panic = "abort"       # smaller + a hair faster (no unwinding)
 strip = true
 debug = false
+overflow-checks = false
+incremental = true
 
 [profile.dev]
 opt-level = 1         # faster compiles for the edit/run loop

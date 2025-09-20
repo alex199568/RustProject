@@ -65,11 +65,7 @@ impl Scene {
         material: &Material,
         buffer: &mut IntersectionBuffer,
     ) -> Color {
-        let mut surface = Color {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-        };
+        let mut surface = Color::new(0.0, 0.0, 0.0);
 
         for light in &self.lights {
             let intensity = self.shadow(light.position, hit.shape_id, hit.over_point, buffer);
@@ -144,11 +140,7 @@ impl Scene {
         let mut stack: Vec<(Ray, f32, usize)> = Vec::with_capacity(max_depth * 2);
         stack.push((*ray0, 1.0, 0));
 
-        let mut out = Color {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-        };
+        let mut out = Color::new(0.0, 0.0, 0.0);
 
         while let Some((ray, thr, depth)) = stack.pop() {
             if depth >= max_depth || thr < 1e-5 {
