@@ -5,7 +5,7 @@ mod img;
 mod intersection;
 mod light;
 mod material;
-mod pattern;
+pub mod pattern;
 mod ray;
 mod render;
 mod robj;

@@ -10,9 +10,6 @@ use std::fmt::Formatter;
 
 use glam::Vec3A;
 
-//3285.359 ms
-//Rendering time: 3211.307 ms
-
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct Color(pub Vec3A);
