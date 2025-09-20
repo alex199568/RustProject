@@ -18,7 +18,7 @@ mod transform;
 use crate::light::Light;
 
 fn main() {
-    let scene = scene2::scene2();
+    let scene = scene1::scene1();
 
-    render::render(&scene, "renders/torus.png");
+    render::render(&scene, "renders/scene1.png");
 }

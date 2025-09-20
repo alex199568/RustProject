@@ -2,4 +2,5 @@
 
 ## Gallery
 
-![Image1](images/area_light.png "Image")
+![Image2](images/torus.png "Scene2")
+![Image1](images/scene1.png "Scene1")
