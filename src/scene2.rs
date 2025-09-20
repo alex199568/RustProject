@@ -8,6 +8,7 @@ use crate::robj::load_obj;
 use crate::transform::{rotate_xd, rotate_yd, rotate_zd, scale, translate};
 
 use crate::camera::Camera;
+use crate::color;
 use crate::color::Color;
 use crate::light::Light;
 use crate::material::Material;
@@ -21,8 +22,8 @@ pub fn scene2() -> Scene {
     let sphere_checkers = UvCheckers {
         width: 16,
         height: 8,
-        a: Color::SNOW,
-        b: Color::DARK_SLATE_GRAY,
+        a: color::White::SNOW,
+        b: color::Gray::DARK_SLATE_GRAY,
     };
     let sphere_texture = SphericalTexture::new(sphere_checkers.into());
     let sphere_material = Material::builder()
@@ -32,11 +33,11 @@ pub fn scene2() -> Scene {
     let sphere = Sphere::new(&sphere_affine, sphere_material.id);
 
     let plane_pattern = AlignCheck {
-        main: Color::GOLD,
-        ul: Color::INDIAN_RED,
-        ur: Color::STEEL_BLUE,
-        bl: Color::VIOLET,
-        br: Color::FOREST_GREEN,
+        main: color::Yellow::GOLD,
+        ul: color::Red::FIRE_BRICK,
+        ur: color::Blue::AQUAMARINE,
+        bl: color::Purple::BLUE_VIOLET,
+        br: color::Green::CHARTRUSE,
     };
     let plane_texture = PlanarTexture::new(plane_pattern.into());
     let plane_material = Material::builder()
@@ -46,11 +47,11 @@ pub fn scene2() -> Scene {
     let plane = Plane::new(&Affine3A::IDENTITY, plane_material.id);
 
     let cube_pattern = AlignCheck {
-        main: Color::GOLD,
-        ul: Color::INDIAN_RED,
-        ur: Color::STEEL_BLUE,
-        bl: Color::VIOLET,
-        br: Color::FOREST_GREEN,
+        main: color::Yellow::GOLD,
+        ul: color::Red::FIRE_BRICK,
+        ur: color::Blue::AQUAMARINE,
+        bl: color::Purple::BLUE_VIOLET,
+        br: color::Green::CHARTRUSE,
     };
     let cube_texture = CubeTexture::new(cube_pattern.into());
     let cube_material = Material::builder()
@@ -64,8 +65,8 @@ pub fn scene2() -> Scene {
     let cylinder_checkers = UvCheckers {
         width: 16,
         height: 8,
-        a: Color::SNOW,
-        b: Color::DARK_SLATE_GRAY,
+        a: color::White::ALICE_BLUE,
+        b: color::Gray::DARK_GRAY,
     };
     let cylinder_texture = CylindricalTexture::new(cylinder_checkers.into());
     let cylinder_material = Material::builder()
@@ -115,16 +116,16 @@ pub fn scene2() -> Scene {
     let (car_materials, car) = load_obj("assets/models/Car.obj", &car_affine);
 
     let torus_affine = translate(0.0, 1.2, 0.0) * rotate_yd(30.0) * rotate_xd(90.0);
-    let torus_material = Material::builder().color(Color::ALICE_BLUE).build();
+    let torus_material = Material::builder().color(color::White::AZURE).build();
     let torus = Torus::new(&torus_affine, torus_material.id, 1.0, 0.2);
 
     let l1 = Light {
         position: glam::vec3a(-10.0, 10.0, -10.0),
-        intensity: Color::WHITE * 0.8,
+        intensity: color::White::WHITE * 0.8,
     };
     let l2 = Light {
         position: glam::vec3a(10.0, 10.0, -10.0),
-        intensity: Color::WHITE * 0.6,
+        intensity: color::White::WHITE * 0.6,
     };
 
     let mut materials = vec![

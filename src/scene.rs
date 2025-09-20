@@ -1,5 +1,6 @@
 use crate::Light;
 use crate::camera::Camera;
+use crate::color;
 use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
@@ -143,7 +144,11 @@ impl Scene {
         let mut stack: Vec<(Ray, f32, usize)> = Vec::with_capacity(max_depth * 2);
         stack.push((*ray0, 1.0, 0));
 
-        let mut out = Color::BLACK;
+        let mut out = Color {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+        };
 
         while let Some((ray, thr, depth)) = stack.pop() {
             if depth >= max_depth || thr < 1e-5 {

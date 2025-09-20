@@ -82,7 +82,7 @@ impl LocalShape for Torus {
         let o = ray.origin;
         let d = ray.direction;
 
-        let R = self.r; // major radius
+        let r = self.r; // major radius
         let r0 = self.thickness; // tube radius
 
         // (Optionally normalize d; not required, but consistent coefficients help.)
@@ -96,21 +96,21 @@ impl LocalShape for Torus {
         // q(t) = |o + t d|^2 + R^2 - r0^2  = a t^2 + b t + c
         let a = d2;
         let b = 2.0 * od;
-        let c = o2 + R * R - r0 * r0;
+        let c = o2 + r * r - r0 * r0;
 
         let dxz2 = d.x * d.x + d.z * d.z;
         let oxz = o.x * d.x + o.z * d.z;
         let oxz2 = o.x * o.x + o.z * o.z;
-        let R2 = R * R;
+        let r2 = r * r;
 
         // (q(t))^2 - 4 R^2 ((ox + t dx)^2 + (oz + t dz)^2) = 0
         let a4 = a * a;
         let a3 = 2.0 * a * b;
-        let a2 = b * b + 2.0 * a * c - 4.0 * R2 * dxz2;
-        let a1 = 2.0 * b * c - 8.0 * R2 * oxz;
-        let a0 = c * c - 4.0 * R2 * oxz2;
+        let a2 = b * b + 2.0 * a * c - 4.0 * r2 * dxz2;
+        let a1 = 2.0 * b * c - 8.0 * r2 * oxz;
+        let a0 = c * c - 4.0 * r2 * oxz2;
 
-        let mut roots = Self::solve_torus_quartic(a4, a3, a2, a1, a0);
+        let roots = Self::solve_torus_quartic(a4, a3, a2, a1, a0);
 
         // ***** Conservative strategy: keep ONLY the nearest hit *****
         if let Some(&t) = roots.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
@@ -134,13 +134,13 @@ impl LocalShape for Torus {
         // ∂F/∂x = 4 x (s - 2R^2)
         // ∂F/∂y = 4 y s
         // ∂F/∂z = 4 z (s - 2R^2)
-        let R = self.r;
+        let r = self.r;
         let r0 = self.thickness;
 
-        let s = p.dot(p) + R * R - r0 * r0;
-        let gx = 4.0 * p.x * (s - 2.0 * R * R);
+        let s = p.dot(p) + r * r - r0 * r0;
+        let gx = 4.0 * p.x * (s - 2.0 * r * r);
         let gy = 4.0 * p.y * s;
-        let gz = 4.0 * p.z * (s - 2.0 * R * R);
+        let gz = 4.0 * p.z * (s - 2.0 * r * r);
 
         let n = glam::vec3a(gx, gy, gz);
         let lsq = n.length_squared();

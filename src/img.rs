@@ -1,3 +1,4 @@
+use crate::color;
 use crate::color::AccColor;
 use crate::color::Color;
 
@@ -15,7 +16,7 @@ impl Img {
         Self {
             w: w,
             h: h,
-            colors: vec![Color::BLACK; w * h],
+            colors: vec![color::Gray::BLACK; w * h],
         }
     }
 

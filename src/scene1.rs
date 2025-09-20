@@ -6,7 +6,7 @@ use glam::Vec3;
 use crate::robj::load_obj;
 
 use crate::camera::Camera;
-use crate::color::Color;
+use crate::color;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{Checkers, Gradient, Rings, Stripes};
@@ -26,48 +26,58 @@ fn create_csg(tr: &Affine3A, m1: usize, m2: usize, m3: usize) -> Shape {
 }
 
 pub fn scene1() -> Scene {
-    let indian_red_material = Material::builder().color(Color::INDIAN_RED).build();
+    let indian_red_material = Material::builder().color(color::Red::INDIAN_RED).build();
     let indian_red_id = indian_red_material.id;
     let forest_green_material = Material::builder()
-        .color(Color::FOREST_GREEN)
+        .color(color::Green::FOREST_GREEN)
         .reflection(0.3)
         .refraction(Material::IOR_GLASS)
         .transparency(0.7)
         .build();
     let forest_green_id = forest_green_material.id;
     let steel_blue_material = Material::builder()
-        .color(Color::STEEL_BLUE)
+        .color(color::Blue::STEEL_BLUE)
         .refraction(Material::IOR_GLASS)
         .transparency(0.6)
         .build();
     let steel_blue_id = steel_blue_material.id;
     let cyan_material = Material::builder()
-        .color(Color::TURQUOISE)
+        .color(color::Blue::TURQUOISE)
         .reflection(0.1)
         .build();
     let cyan_id = cyan_material.id;
-    let alice_blue_material = Material::builder().color(Color::ALICE_BLUE).build();
+    let alice_blue_material = Material::builder().color(color::White::ALICE_BLUE).build();
     let alice_blue_id = alice_blue_material.id;
-    let lavender_material = Material::builder().color(Color::LAVENDER).build();
+    let lavender_material = Material::builder()
+        .color(color::White::LAVENDER_BLUSH)
+        .build();
     let lavender_id = lavender_material.id;
 
     let stripes_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
-    let stripes = Stripes::new(&stripes_affine, Color::SNOW, Color::SILVER);
+    let stripes = Stripes::new(&stripes_affine, color::White::SNOW, color::Gray::SILVER);
     let stripes_material = Material::builder().pattern(Some(stripes.into())).build();
     let stripes_id = stripes_material.id;
 
     let gradient_affine = Affine3A::from_scale(glam::vec3(0.2, 1.0, 1.0));
-    let gradient = Gradient::new(&gradient_affine, Color::GAINSBORO, Color::SILVER);
+    let gradient = Gradient::new(
+        &gradient_affine,
+        color::Gray::GAINSBORO,
+        color::Gray::SILVER,
+    );
     let gradient_material = Material::builder().pattern(Some(gradient.into())).build();
     let gradient_id = gradient_material.id;
 
     let rings_affine = Affine3A::IDENTITY;
-    let rings = Rings::new(&rings_affine, Color::GOLD, Color::VIOLET);
+    let rings = Rings::new(&rings_affine, color::Yellow::GOLD, color::Purple::VIOLET);
     let rings_material = Material::builder().pattern(Some(rings.into())).build();
     let rings_id = rings_material.id;
 
     let checkers_affine = Affine3A::IDENTITY;
-    let checkers = Checkers::new(&checkers_affine, Color::SNOW, Color::DARK_SLATE_GRAY);
+    let checkers = Checkers::new(
+        &checkers_affine,
+        color::White::SNOW,
+        color::Gray::DARK_SLATE_GRAY,
+    );
     let checkers_material = Material::builder()
         .pattern(Some(checkers.into()))
         .reflection(0.3)
@@ -75,19 +85,19 @@ pub fn scene1() -> Scene {
     let checkers_id = checkers_material.id;
 
     let red_material = Material::builder()
-        .color(Color::RED)
+        .color(color::Red::CRIMSON)
         .transparency(0.5)
         .refraction(Material::IOR_AIR)
         .build();
     let red_id = red_material.id;
     let green_material = Material::builder()
-        .color(Color::GREEN)
+        .color(color::Green::CHARTRUSE)
         .transparency(0.5)
         .refraction(Material::IOR_AIR)
         .build();
     let green_id = green_material.id;
     let blue_material = Material::builder()
-        .color(Color::BLUE)
+        .color(color::Blue::AQUA)
         .transparency(0.3)
         .reflection(0.2)
         .refraction(Material::IOR_GLASS)
@@ -198,11 +208,11 @@ pub fn scene1() -> Scene {
     let lights: Vec<Light> = vec![
         Light {
             position: l1_position,
-            intensity: Color::WHITE * 0.4,
+            intensity: color::White::WHITE * 0.4,
         },
         Light {
             position: l2_position,
-            intensity: Color::WHITE * 0.7,
+            intensity: color::White::WHITE * 0.7,
         },
     ];
 

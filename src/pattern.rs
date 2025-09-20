@@ -8,6 +8,7 @@ use glam::Vec3A;
 use std::convert::From;
 
 // TODO: split into separate files
+// TODO: improve cylindrical mapping
 
 struct PatternCommon {
     inv: Affine3A,
@@ -161,7 +162,7 @@ impl LocalPattern for SphericalTexture {
 }
 
 pub struct PlanarTexture {
-    pub common: PatternCommon,
+    common: PatternCommon,
     pub uv_pattern: UvPattern,
 }
 

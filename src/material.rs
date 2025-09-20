@@ -1,3 +1,4 @@
+use crate::color;
 use crate::color::Color;
 use crate::pattern::Pattern;
 
@@ -15,7 +16,7 @@ fn next_material_id() -> usize {
 pub struct Material {
     #[builder(default = next_material_id(), setter(skip))]
     pub id: usize,
-    #[builder(default = Color::BLACK)]
+    #[builder(default = color::Gray::BLACK)]
     pub color: Color,
     #[builder(default = 0.01)]
     pub ambient: f32,
