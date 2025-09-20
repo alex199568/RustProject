@@ -91,7 +91,7 @@ pub fn scene1() -> Scene {
         .build();
     let red_id = red_material.id;
     let green_material = Material::builder()
-        .color(color::Green::CHARTRUSE)
+        .color(color::Green::CHARTREUSE)
         .transparency(0.5)
         .refraction(Material::IOR_AIR)
         .build();

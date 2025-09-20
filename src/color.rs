@@ -181,7 +181,7 @@ impl Red {
     pub const INDIAN_RED: Color = Color::hex(0xCD5C5C);
     pub const LIGHT_CORAL: Color = Color::hex(0xF08080);
     pub const SALMON: Color = Color::hex(0xFA8072);
-    pub const DAKR_SALMON: Color = Color::hex(0xE9967A);
+    pub const DARK_SALMON: Color = Color::hex(0xE9967A);
     pub const LIGHT_SALMON: Color = Color::hex(0xFFA07A);
     pub const CRIMSON: Color = Color::hex(0xDC143C);
     pub const RED: Color = Color::hex(0xFF0000);
@@ -203,8 +203,6 @@ impl Pink {
 pub struct Orange;
 
 impl Orange {
-    pub const LIGHT_SALMON: Color = Color::hex(0xFFA07A);
-    pub const CORAL: Color = Color::hex(0xFF7F50);
     pub const TOMATO: Color = Color::hex(0xFF6347);
     pub const ORANGE_RED: Color = Color::hex(0xFF4500);
     pub const DARK_ORANGE: Color = Color::hex(0xFF8C00);
@@ -218,7 +216,7 @@ impl Yellow {
     pub const YELLOW: Color = Color::hex(0xFFFF00);
     pub const LIGHT_YELLOW: Color = Color::hex(0xFFFFE0);
     pub const LEMON_CHIFFON: Color = Color::hex(0xFFFACD);
-    pub const LIGHT_GOLDENROD_YELLOW: Color = Color::hex(0xFFEFD5);
+    pub const LIGHT_GOLDENROD_YELLOW: Color = Color::hex(0xFAFAD2);
     pub const PAPAYA_WHIP: Color = Color::hex(0xFFEFD5);
     pub const MOCCASIN: Color = Color::hex(0xFFE4B5);
     pub const PEACH_PUFF: Color = Color::hex(0xFFDAB9);
@@ -255,7 +253,7 @@ pub struct Green;
 
 impl Green {
     pub const GREEN_YELLOW: Color = Color::hex(0xADFF2F);
-    pub const CHARTRUSE: Color = Color::hex(0x7FFF00);
+    pub const CHARTREUSE: Color = Color::hex(0x7FFF00);
     pub const LAWN_GREEN: Color = Color::hex(0x7CFC00);
     pub const LIME: Color = Color::hex(0x00FF00);
     pub const LIME_GREEN: Color = Color::hex(0x32CD32);
@@ -296,7 +294,7 @@ impl Blue {
     pub const POWDER_BLUE: Color = Color::hex(0xB0E0E6);
     pub const LIGHT_BLUE: Color = Color::hex(0xADD8E6);
     pub const SKY_BLUE: Color = Color::hex(0x87CEEB);
-    pub const LIGHT_BLUE_SKY: Color = Color::hex(0x87CEFA);
+    pub const LIGHT_SKY_BLUE: Color = Color::hex(0x87CEFA);
     pub const DEEP_SKY_BLUE: Color = Color::hex(0x00BFFF);
     pub const DODGER_BLUE: Color = Color::hex(0x1E90FF);
     pub const CORNFLOWER_BLUE: Color = Color::hex(0x6495ED);

@@ -37,7 +37,7 @@ pub fn scene2() -> Scene {
         ul: color::Red::FIRE_BRICK,
         ur: color::Blue::AQUAMARINE,
         bl: color::Purple::BLUE_VIOLET,
-        br: color::Green::CHARTRUSE,
+        br: color::Green::CHARTREUSE,
     };
     let plane_texture = PlanarTexture::new(plane_pattern.into());
     let plane_material = Material::builder()
@@ -51,7 +51,7 @@ pub fn scene2() -> Scene {
         ul: color::Red::FIRE_BRICK,
         ur: color::Blue::AQUAMARINE,
         bl: color::Purple::BLUE_VIOLET,
-        br: color::Green::CHARTRUSE,
+        br: color::Green::CHARTREUSE,
     };
     let cube_texture = CubeTexture::new(cube_pattern.into());
     let cube_material = Material::builder()
