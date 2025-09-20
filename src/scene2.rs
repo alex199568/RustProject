@@ -9,7 +9,6 @@ use crate::transform::{rotate_yd, scale, translate};
 
 use crate::camera::Camera;
 use crate::color::Color;
-use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{
@@ -144,7 +143,6 @@ pub fn scene2() -> Scene {
         car,
     ];
     let lights = vec![l1, l2];
-    let area_lights = vec![];
 
     let camera_view = Affine3A::look_at_rh(
         glam::vec3(0.0, 3.0, -12.0),
@@ -157,7 +155,6 @@ pub fn scene2() -> Scene {
         materials: materials,
         shapes: shapes,
         lights: lights,
-        area_lights: area_lights,
         camera: camera,
     }
 }

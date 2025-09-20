@@ -7,7 +7,6 @@ use crate::robj::load_obj;
 
 use crate::camera::Camera;
 use crate::color::Color;
-use crate::light::AreaLight;
 use crate::light::Light;
 use crate::material::Material;
 use crate::pattern::{Checkers, Gradient, Rings, Stripes};
@@ -196,25 +195,16 @@ pub fn scene1() -> Scene {
 
     let l1_position = glam::vec3a(-3.0, 2.0, -16.0);
     let l2_position = glam::vec3a(10.0, 10.0, -16.0);
-    let lights: Vec<Light> = vec![];
-
-    let al1 = AreaLight::new(
-        l1_position,
-        glam::vec3a(0.2, 0.0, 0.0),
-        2,
-        glam::vec3a(0.0, 0.2, 0.0),
-        2,
-        Color::WHITE * 0.4,
-    );
-    let al2 = AreaLight::new(
-        l2_position,
-        glam::vec3a(0.2, 0.0, 0.0),
-        2,
-        glam::vec3a(0.0, 0.2, 0.0),
-        2,
-        Color::WHITE * 0.7,
-    );
-    let area_lights: Vec<AreaLight> = vec![al1, al2];
+    let lights: Vec<Light> = vec![
+        Light {
+            position: l1_position,
+            intensity: Color::WHITE * 0.4,
+        },
+        Light {
+            position: l2_position,
+            intensity: Color::WHITE * 0.7,
+        },
+    ];
 
     let camera_view = Affine3A::look_at_rh(
         glam::vec3(0.0, 4.0, -12.0),
@@ -227,7 +217,6 @@ pub fn scene1() -> Scene {
         materials: materials,
         shapes: shapes,
         lights: lights,
-        area_lights: area_lights,
         camera: camera,
     }
 }

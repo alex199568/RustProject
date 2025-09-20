@@ -4,7 +4,6 @@ use crate::color::Color;
 use crate::intersection::Hit;
 use crate::intersection::Intersection;
 use crate::intersection::IntersectionBuffer;
-use crate::light::AreaLight;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::shape::Shape;
@@ -15,7 +14,6 @@ pub struct Scene {
     pub materials: Vec<Material>,
     pub shapes: Vec<Shape>,
     pub lights: Vec<Light>,
-    pub area_lights: Vec<AreaLight>,
     pub camera: Camera,
 }
 
@@ -59,36 +57,6 @@ impl Scene {
         transittance
     }
 
-    fn light_intensity(
-        &self,
-        shape_id: usize,
-        light: &Light,
-        point: Vec3A,
-        buffer: &mut IntersectionBuffer,
-    ) -> f32 {
-        self.shadow(light.position, shape_id, point, buffer)
-    }
-
-    fn area_light_intensity(
-        &self,
-        shape_id: usize,
-        light: &AreaLight,
-        point: Vec3A,
-        buffer: &mut IntersectionBuffer,
-    ) -> f32 {
-        let mut total = 0.0f32;
-
-        for v in 0..light.vsteps {
-            for u in 0..light.usteps {
-                let position = light.point_on(u as f32, v as f32);
-                let s = self.shadow(position, shape_id, point, buffer);
-                total += s;
-            }
-        }
-
-        total / light.samples as f32
-    }
-
     fn shade(
         &self,
         hit: &Hit,
@@ -103,14 +71,7 @@ impl Scene {
         };
 
         for light in &self.lights {
-            // let s = self.shadow(light.position, hit.shape_id, hit.over_point, buffer);
-            let intensity = self.light_intensity(hit.shape_id, light, hit.over_point, buffer);
-            let c = light.shade(shape, material, hit, self) * intensity;
-            surface += c;
-        }
-
-        for light in &self.area_lights {
-            let intensity = self.area_light_intensity(hit.shape_id, light, hit.over_point, buffer);
+            let intensity = self.shadow(light.position, hit.shape_id, hit.over_point, buffer);
             let c = light.shade(shape, material, hit, self) * intensity;
             surface += c;
         }
