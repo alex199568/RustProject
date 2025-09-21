@@ -1,5 +1,6 @@
 use crate::aabb::Aabb;
 use crate::intersection::{Intersection, IntersectionBuffer};
+use crate::pattern::CubeFace;
 use crate::ray::Ray;
 use crate::shape::shape::{LocalShape, Shape, ShapeCommon, ShapeTransform};
 use std::convert::From;
@@ -34,15 +35,19 @@ impl LocalShape for Cube {
         if tmin > tmax {
             return;
         }
+
+        let uv1 = CubeFace::map_point(ray.at(tmin));
+        let uv2 = CubeFace::map_point(ray.at(tmax));
+
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: tmin,
-            uv: None,
+            uv: Some(uv1),
         });
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: tmax,
-            uv: None,
+            uv: Some(uv2),
         });
     }
 

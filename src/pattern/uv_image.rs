@@ -8,6 +8,7 @@ use crate::img::Img;
 pub struct UvImage {
     img: Img,
     flip: bool,
+    scale: Vec2,
 }
 
 impl UvImage {
@@ -15,6 +16,15 @@ impl UvImage {
         Self {
             img: img,
             flip: flip,
+            scale: glam::vec2(1.0, 1.0),
+        }
+    }
+
+    pub fn scaled(img: Img, scale: Vec2) -> Self {
+        Self {
+            img: img,
+            flip: false,
+            scale: scale,
         }
     }
 
@@ -24,9 +34,12 @@ impl UvImage {
         if self.flip {
             v = 1.0 - v;
         }
-        let x = u * (self.img.w as f32 - 1.0);
-        let y = v * (self.img.h as f32 - 1.0);
-        self.img.get(x.round() as usize, y.round() as usize)
+        let x = u * (self.img.w as f32 - 1.0) * self.scale.x;
+        let y = v * (self.img.h as f32 - 1.0) * self.scale.y;
+        self.img.get(
+            x.round() as usize % self.img.w,
+            y.round() as usize % self.img.h,
+        )
     }
 }
 

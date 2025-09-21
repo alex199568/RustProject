@@ -103,7 +103,7 @@ impl LocalShape for Triangle {
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t,
-            uv: Some(glam::vec2(u, v)),
+            uv: Some(self.local_uv(ray.at(t))),
         });
     }
 

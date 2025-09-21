@@ -9,7 +9,7 @@ use glam::Vec3A;
 
 pub struct CubeTexture {
     pub common: PatternCommon,
-    uv_pattern: UvPattern,
+    pub uv_pattern: UvPattern,
 }
 
 impl CubeTexture {
