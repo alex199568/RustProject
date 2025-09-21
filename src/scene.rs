@@ -89,6 +89,36 @@ impl Scene {
         }
     }
 
+    fn resolve_normal(
+        &self,
+        hit_intersection: Intersection,
+        shape: &Shape,
+        material: &Material,
+        hit_point: Vec3A,
+    ) -> Vec3A {
+        match &material.normal_pattern {
+            Some(np) => {
+                if let Pattern::PlanarTexture(pt) = np {
+                    let mut shape_normal =
+                        pt.uv_pattern.uv_pattern_at(hit_intersection.uv.unwrap()).0;
+
+                    let mut parent_id = shape.common().parent_id;
+                    while parent_id.is_some() {
+                        let parent_shape = self.find_shape_by_id(parent_id.unwrap());
+                        shape_normal = parent_shape.transform_normal(shape_normal);
+                        shape_normal = shape_normal.normalize();
+                        parent_id = parent_shape.common().parent_id;
+                    }
+
+                    shape_normal
+                } else {
+                    shape.normal(hit_point, self, hit_intersection)
+                }
+            }
+            None => shape.normal(hit_point, self, hit_intersection),
+        }
+    }
+
     fn shade(
         &self,
         hit: &Hit,
@@ -187,7 +217,8 @@ impl Scene {
             let shape = self.find_shape_by_id(hit.shape_id);
             let m = self.find_material_by_id(shape.material_id());
 
-            let h = Hit::new(shape, hit, &ray, self);
+            let n = self.resolve_normal(hit, shape, m, ray.at(hit.t));
+            let h = Hit::new(n, hit, &ray);
             let m_color = self.resolve_material_color(shape, m, h.point);
 
             // --- local lighting (non-transmitted part) ---

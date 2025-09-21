@@ -28,6 +28,8 @@ pub struct Material {
     pub shininess: f32,
     #[builder(default = None)]
     pub pattern: Option<Pattern>,
+    #[builder(default = None)]
+    pub normal_pattern: Option<Pattern>,
     #[builder(default = 0.0)]
     pub reflection: f32,
     #[builder(default = 0.0)]

@@ -19,7 +19,7 @@ impl PlanarTexture {
     }
 
     fn map_point(point: Vec3A) -> Vec2 {
-        glam::vec2(point.x.fract(), point.z.fract())
+        glam::vec2(point.x.fract().abs(), point.z.fract().abs())
     }
 }
 

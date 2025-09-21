@@ -33,10 +33,22 @@ impl LocalShape for Plane {
             return;
         }
         let t = -ray.origin.y / ray.direction.y;
+
+        // Hit point in *local* space (plane is y=0 with normal +Y)
+        let p = ray.origin + ray.direction * t;
+
+        // Tile size in world units per repeat (adjust as you like)
+        let tile_u = 1.0_f32;
+        let tile_v = 1.0_f32;
+
+        // Map to [0,1) and handle negatives correctly
+        let u = (p.x / tile_u).rem_euclid(1.0);
+        let v = (p.z / tile_v).rem_euclid(1.0);
+
         buffer.add(Intersection {
             shape_id: self.common.id,
             t: t,
-            uv: None,
+            uv: Some(glam::vec2(u, v)),
         });
     }
 

@@ -33,12 +33,6 @@ pub trait LocalPattern {
     fn local_at(&self, point: Vec3A) -> Color;
 }
 
-impl LocalPattern for SphericalTexture {
-    fn local_at(&self, point: Vec3A) -> Color {
-        self.uv_pattern.uv_pattern_at(Self::map_point(point))
-    }
-}
-
 pub enum Pattern {
     Stripes(Stripes),
     Gradient(Gradient),

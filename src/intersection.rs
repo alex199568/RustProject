@@ -67,11 +67,11 @@ pub struct Hit {
 }
 
 impl Hit {
-    pub fn new(shape: &Shape, intersection: Intersection, ray: &Ray, scene: &Scene) -> Self {
+    pub fn new(resolved_normal: Vec3A, intersection: Intersection, ray: &Ray) -> Self {
         let point = ray.at(intersection.t);
         let eye = -ray.direction;
 
-        let mut normal = shape.normal(point, scene, intersection);
+        let mut normal = resolved_normal;
         if normal.dot(eye) < 0.0 {
             normal = -normal;
         }

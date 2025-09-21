@@ -1,5 +1,6 @@
-use crate::pattern::pattern::{Pattern, PatternCommon};
+use crate::pattern::pattern::{Pattern, PatternCommon, LocalPattern};
 use crate::pattern::uv_pattern::UvPattern;
+use crate::color::Color;
 
 use glam::{Affine3A, Vec2, Vec3A};
 
@@ -26,6 +27,13 @@ impl SphericalTexture {
         }
     }
 }
+
+impl LocalPattern for SphericalTexture {
+    fn local_at(&self, point: Vec3A) -> Color {
+        self.uv_pattern.uv_pattern_at(Self::map_point(point))
+    }
+}
+
 impl From<SphericalTexture> for Pattern {
     fn from(t: SphericalTexture) -> Self {
         Pattern::SphericalTexture(t)

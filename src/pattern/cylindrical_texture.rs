@@ -5,8 +5,6 @@ use glam::{Affine3A, Vec2, Vec3A};
 
 use crate::color::Color;
 
-// TODO: improve cylindrical mapping
-
 pub struct CylindricalTexture {
     pub common: PatternCommon,
     uv_pattern: UvPattern,
